@@ -63,20 +63,20 @@ Here we assume the document that needs to be saved is string.
     - HashTable\<String, \DataObjPair> storedData
     - HashTable<String, Node> globalNodeTable
   - Methods
-    - 
+    - ...
 #### Cassandra
 * CNode extends Node implements NodeManager -- every node is a master.
   - Attrubutes
     - Successor Node -- Cassandra only stores the successor. 
-    - 
+    - ...
   - Methods
-    - 
+    - ...
 * CDHT implements BasicDHT
   - Attributes
     - Long hashSpace
   - Methods
     - Long Hash()
-    - 
+    - ...
 #### Ceph
 * 
 [Put your own design here]
