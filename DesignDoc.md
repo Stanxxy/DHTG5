@@ -31,9 +31,7 @@ Here we assume the document that needs to be saved is string.
   - List\<String\> batchDelete(List\<DataObjPair\> dataObjList)
 * NodeManager
   - List\<Node\> listAllNodes()
-  - String addNode(Node node)
   - String addNode(String ip)
-  - String removeNode(Node node)
   - String removeNode(String ip)
   - boolean loadBalancing() -- to manually do load balancing.
   - boolean autoLB() -- automize load balancing. based on loadBalancing method.
@@ -60,8 +58,8 @@ Here we assume the document that needs to be saved is string.
 * Node 
   - Attributes
     - String ip
-    - HashTable\<String, \DataObjPair> storedData
-    - HashTable<String, Node> globalNodeTable
+    - HashMap\<String, DataObjPair> storedData
+    - HashMap\<String, Node> globalNodeTable
   - Methods
     - ...
 #### Cassandra
