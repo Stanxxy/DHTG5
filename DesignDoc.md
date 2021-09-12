@@ -80,5 +80,5 @@ Here we assume the document that needs to be saved is string.
 #### Ceph
 * 
 [Put your own design here]
-## Architect
+## Architecture 
 [Better put a pic here.]
