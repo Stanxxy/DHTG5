@@ -5,12 +5,25 @@ import java.util.Map;
 
 public abstract class Node {
 
-    protected String ip;
+    protected String name;
 
     protected Long capacity;
 
     protected Long load;
 
-    protected Map<String, DataObjPair> storedData;
+    protected Map<Long, DataObjPair> storedData;
+
+
+    public Long getCapacity() {
+        return capacity;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Long getLoad(){
+        return load;
+    }
 
 }

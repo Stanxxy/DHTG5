@@ -2,13 +2,13 @@ package com.company;
 
 public interface BasicDHT {
 
-    String insert(String key, String value);
+    boolean insert(Long key, String value);
 
-    String select(String key);
+    boolean select(Long key);
 
-    String update(String key, String value);
+    boolean update(Long key, String value);
 
-    String delete(String key);
+    boolean delete(Long key);
 
     String getName();
 }

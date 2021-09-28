@@ -6,13 +6,17 @@ import java.util.List;
 
 public interface NodeManager {
 
-    List<Node> listAllNodes();
+    String listAllNodes();
 
-    String addNode(String ip);
+    String listNodeData(String name);
 
-    String removeNode(String ip);
+    void addNode(String name);
 
-    boolean loadBalancing();
+    void addNode(String name, Long hashValue);
 
-    boolean autoLB();
+    void shutDownNode(String name);
+
+    void breakDownNode(String name);
+
+    void loadBalancing(String name);
 }

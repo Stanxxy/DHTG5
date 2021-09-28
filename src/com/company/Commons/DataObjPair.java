@@ -2,14 +2,14 @@ package com.company.Commons;
 
 
 public class DataObjPair {
-    String key;
+    Long key;
     String value;
 
-    public String getKey() {
+    public Long getKey() {
         return key;
     }
 
-    public void setKey(String key) throws IllegalAccessException {
+    public void setKey(Long key) throws IllegalAccessException {
         if(this.key == null){
             this.key = key;
         } else {
@@ -29,8 +29,16 @@ public class DataObjPair {
 
     }
 
-    public DataObjPair(String key, String value) {
+    public DataObjPair(Long key, String value) {
         this.key = key;
         this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return "DataObjPair{" +
+                "key=" + key +
+                ", value='" + value + '\'' +
+                '}';
     }
 }

@@ -41,6 +41,7 @@ public class Main {
     }
 
     // TODO : A manu method
+
     private void run() {
         while(running) {
             Command.printMenu(commands);

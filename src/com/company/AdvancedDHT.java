@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Set;
 
 public interface AdvancedDHT extends BasicDHT{
-    List<String> batchInsert(List<DataObjPair> dataObjList);
+    boolean batchInsert(List<DataObjPair> dataObjList);
 
-    List<DataObjPair> batchSelect(Set<String> keySet);
+    boolean batchSelect(Set<String> keySet);
 
-    List<String> batchUpdate(List<DataObjPair> dataObjList);
+    boolean batchUpdate(List<DataObjPair> dataObjList);
 
-    List<String> batchDelete(List<DataObjPair> dataObjList);
+    boolean batchDelete(List<DataObjPair> dataObjList);
 }
