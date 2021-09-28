@@ -1,8 +1,6 @@
 package com.company.Utils;
 
 import com.company.Cassandra.CaCluster;
-
-import java.security.MessageDigest;
 import java.util.*;
 
 public class RingHashTools {
