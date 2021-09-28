@@ -1,13 +1,18 @@
 package com.company.Utils;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class RingHashTools {
 
     private MessageDigest md;
 
     public RingHashTools(){
-        md = MessageDigest.getInstance("sha-1");
+        try {
+            md = MessageDigest.getInstance("sha-1");
+        } catch(NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     public static Long calculateNodeHash(String ip){
