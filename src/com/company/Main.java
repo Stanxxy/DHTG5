@@ -25,7 +25,15 @@ public class Main {
             switch(nextOption){
                 case "s": selectDHT(sc);
                 break;
-                case ""
+                case "i": DBOps(sc, "i");
+                break;
+                case "r": DBOps(sc, "r");
+                break;
+                case "u": DBOps(sc, "u");
+                break;
+                case "d": DBOps(sc, "d");
+                break;
+
             }
             printMenu();
             nextOption = sc.next();
