@@ -1,6 +1,6 @@
 package com.company;
 
-import com.company.commands.*;
+import com.company.Commands.*;
 
 import java.util.Scanner;
 
@@ -15,6 +15,9 @@ public class Main {
     public BasicDHT foregroundDHT;
     public BasicDHT backgroundDHT;
 
+    public NodeManager foregroundManager;
+    public NodeManager backgroundManager;
+
     private Command[] commands;
     private Scanner terminal;
     private boolean running;
@@ -28,7 +31,14 @@ public class Main {
                 new Retrieve(this),
                 new Update(this),
                 new Delete(this),
-                new Quit(this),
+                new AddNode(this),
+                new RemoveNode(this),
+                new UnplugNode(this),
+                new BalanceLoad(this),
+                new SetClusterMeta(this),
+                new ListAllNodes(this),
+                new ListNodeData(this),
+                new Quit(this)
         };
         helpCommand.setCommands(commands);
         terminal = new Scanner(System.in);
@@ -39,8 +49,6 @@ public class Main {
         running = true;
         run();
     }
-
-    // TODO : A manu method
 
     private void run() {
         while(running) {
@@ -56,38 +64,4 @@ public class Main {
     public Scanner getScanner() {
         return terminal;
     }
-
-    /*
-    private void printMenu() {
-        // in this function, we simply print the menu
-        System.out.println("ln -- list existing node list");
-        System.out.println("ld -- list the metadata of all stored files");
-        System.out.println("an -- add node");
-        System.out.println("rn -- remove nodes");
-        System.out.println("lb -- ask the system to do load balance");
-    }
-
-     */
-
-    /*
-    private void listNode(){
-
-    }
-
-    private void listData(){
-
-    }
-
-    private void addNode(){
-
-    }
-
-    private void removeNode(){
-
-    }
-
-    private void loadBalance(){
-
-    }
-    */
 }

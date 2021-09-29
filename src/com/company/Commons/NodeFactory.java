@@ -10,7 +10,7 @@ import java.util.Map;
 public class NodeFactory {
 
     // initialize needed nodes. For cassandra, simply put type "Ca"
-    public static List<Node> initializeNodes(String type, Integer nodeNumber){
+    public static void initializeNodes(String type, Integer nodeNumber){
         List<Node> nodeList = new ArrayList<>(nodeNumber);
         if(type.equals("Ca")){ // Ca for Cassandra
             Long hashRange = CaCluster.getHashRange();
@@ -21,14 +21,12 @@ public class NodeFactory {
                 // tmpHash is the endpoints, and it is inclusive;
                 // counter is the sequence number for node.
                 // node hash should not be the same with its sequence number. As the node may move.
-                nodeList.add(generateNode(type, "Ca_Node-"+counter, tmpHash));
+                generateNode(type, "Ca_Node-"+counter, tmpHash);
                 tmpHash += interval;
                 counter++;
             }
-            return nodeList;
         } else {
             // for ceph
-            return null;
         }
     }
 

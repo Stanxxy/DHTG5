@@ -10,13 +10,19 @@ public interface NodeManager {
 
     String listNodeData(String name);
 
+    void setReplica(Long numReplica);
+
+    void setReplica(Long numReplica, Long minCopy);
+
+    void setHashRange(Long range);
+
     void addNode(String name);
 
     void addNode(String name, Long hashValue);
 
-    void shutDownNode(String name);
+    void removeNode(String name);
 
-    void breakDownNode(String name);
+    void unplugNode(String name);
 
     void loadBalancing(String name);
 }

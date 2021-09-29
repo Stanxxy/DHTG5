@@ -1,7 +1,10 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.BasicDHT;
+import com.company.Cassandra.CaCluster;
+import com.company.Cassandra.CaDHT;
 import com.company.Main;
+import com.company.NodeManager;
 
 public class SelectDHT extends Command {
     public SelectDHT(Main main) {
@@ -14,16 +17,26 @@ public class SelectDHT extends Command {
         String type = main.getScanner().nextLine();
         if(type.equals("Ca")){
             if(main.backgroundDHT == null){
-                // main.foregroundDHT = new CaDHT();
+                CaDHT dhtObj = new CaDHT(CaCluster.getCluster());
+                main.foregroundDHT = dhtObj;
+                main.foregroundManager = dhtObj;
             } else if(!main.foregroundDHT.getName().equals("CaDHT")){
-                BasicDHT tmp = main.foregroundDHT;
-                main.foregroundDHT = main.backgroundDHT;
-                main.backgroundDHT = tmp;
+                swap();
             }
         } else if(type.equals("Ce")) {
             // ## do your own code here ##
         } else {
             System.out.println("No such DHT type exists");
         }
+    }
+
+    private void swap(){
+        BasicDHT tmpDHT = main.foregroundDHT;
+        main.foregroundDHT = main.backgroundDHT;
+        main.backgroundDHT = tmpDHT;
+
+        NodeManager tmpManager = main.foregroundManager;
+        main.foregroundManager = main.backgroundManager;
+        main.backgroundManager = tmpManager;
     }
 }
