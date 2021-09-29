@@ -9,7 +9,7 @@ public class Update extends Command {
 
     @Override
     protected void runOnLine(String[] args) {
-        String key = args[1];
+        Long key = Long.parseLong(args[1]);
         String newValue = args[2];
 
     }
