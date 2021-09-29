@@ -1,4 +1,4 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
@@ -9,7 +9,7 @@ public class Retrieve extends Command {
 
     @Override
     protected void runOnLine(String[] args) {
-        String key = args[1];
+        Long key = Long.parseLong(args[1]);
 
         main.foregroundDHT.select(key);
     }
