@@ -2,8 +2,6 @@ package com.company.commands;
 
 import com.company.Main;
 
-import java.util.Arrays;
-
 public class Help extends Command {
     private Command[] commands;
 

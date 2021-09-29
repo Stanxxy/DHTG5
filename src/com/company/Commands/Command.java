@@ -2,9 +2,6 @@ package com.company.commands;
 
 import com.company.Main;
 
-import java.util.Arrays;
-import java.util.MissingFormatArgumentException;
-
 public abstract class Command {
     protected Main main;
     protected String commandText;

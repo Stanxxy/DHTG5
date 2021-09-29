@@ -11,7 +11,7 @@ public class Insert extends Command {
 
     @Override
     protected void runOnLine(String[] args) {
-        String key = args[1];
+        Long key = Long.parseLong(args[1]);
         String[] arrayOfSplitValue = Arrays.copyOfRange(args, 2, args.length);
         StringBuilder valueBuilder = new StringBuilder();
         for(String split : arrayOfSplitValue) {
@@ -19,6 +19,6 @@ public class Insert extends Command {
         }
         String value = valueBuilder.toString();
 
-        System.out.println(key + ": " + value);
+        main.foregroundDHT.insert(key, value);
     }
 }
