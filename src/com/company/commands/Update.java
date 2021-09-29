@@ -12,6 +12,5 @@ public class Update extends Command {
         String key = args[1];
         String newValue = args[2];
 
-        main.foregroundDHT.update(key, newValue);
     }
 }

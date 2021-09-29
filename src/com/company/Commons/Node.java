@@ -25,5 +25,4 @@ public abstract class Node {
     public Long getLoad(){
         return load;
     }
-
 }

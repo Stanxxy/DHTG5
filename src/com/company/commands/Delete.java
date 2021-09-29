@@ -11,6 +11,5 @@ public class Delete extends Command {
     protected void runOnLine(String[] args) {
         String key = args[1];
 
-        main.foregroundDHT.delete(key);
     }
 }

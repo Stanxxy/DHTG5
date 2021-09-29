@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class NodeCluster <NType> {
+public class NodeCluster<NType> {
 
     protected Map<String, NType> globalNodeTable; // now string is the string hash value.
 

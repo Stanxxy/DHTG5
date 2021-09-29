@@ -27,7 +27,7 @@ public class NodeFactory {
             }
             return nodeList;
         } else {
-            // for ceph
+
             return null;
         }
     }
