@@ -1,4 +1,4 @@
 package com.company.Cassandra;
 
-public class DBManager {
+public class DBOps {
 }

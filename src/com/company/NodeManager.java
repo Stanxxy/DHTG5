@@ -9,6 +9,8 @@ public interface NodeManager {
     String listAllNodes();
 
     String listNodeData(String name);
+    // for testing purpose. You may implement this with an empty method
+    String listNodeMeta(String name);
 
     void setReplica(Long numReplica);
 

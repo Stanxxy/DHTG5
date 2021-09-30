@@ -1,4 +1,4 @@
 package com.company.Cassandra;
 
-public class SystemManager {
+public class ServiceOps {
 }

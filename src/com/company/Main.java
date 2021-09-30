@@ -38,6 +38,7 @@ public class Main {
                 new SetClusterMeta(this),
                 new ListAllNodes(this),
                 new ListNodeData(this),
+                new ListNodeMeta(this),
                 new Quit(this)
         };
         helpCommand.setCommands(commands);

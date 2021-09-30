@@ -11,6 +11,7 @@ public class SetClusterMeta extends Command{
 
     @Override
     protected void runOnLine(String[] args) {
+
         Integer nodeNum = Integer.parseInt(args[1]);
         Long replica = Long.parseLong(args[2]);
         Long hashRange = Long.parseLong(args[3]);

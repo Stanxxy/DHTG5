@@ -4,7 +4,7 @@ import com.company.Main;
 
 public class RemoveNode extends Command{
     public RemoveNode(Main main) {
-        super(main, "rm", "remove a node from the cluster", 1);
+        super(main, "rn", "remove a node from the cluster", 1);
     }
 
     @Override

@@ -10,5 +10,6 @@ public class Quit extends Command {
     @Override
     protected void runOnLine(String[] args) {
         main.stop();
+
     }
 }
