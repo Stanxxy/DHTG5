@@ -1,13 +1,11 @@
 package com.company.Ceph;
 
-import com.company.Ceph.CeCluster;
 import com.company.Commons.DataObjPair;
 import com.company.Commons.Node;
 import com.company.Commons.NodeCluster;
 import com.company.issuables.Insert;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.*;
 
 public class CeNode extends Node {

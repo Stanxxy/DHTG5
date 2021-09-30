@@ -1,10 +1,5 @@
 package com.company;
 
-import com.company.Commons.Node;
-
-import java.util.List;
-import java.util.Map;
-
 public interface NodeManager {
     String listAllNodes();
     String listNodeData(String name); // for testing purpose. You may implement this with an empty method

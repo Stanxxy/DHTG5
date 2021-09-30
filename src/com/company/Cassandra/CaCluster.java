@@ -12,7 +12,7 @@ public class CaCluster extends NodeCluster<CaNode> {
     }
 
     public String searchForTheNearestAlive(String nodeName, String downName, int direction){
-        // search for the nearest live node in the direction
+        // search for the nearest alive node in the direction
 
         // here we ensure the node is not null
         CaNode node = globalNodeTable.get(nodeName);

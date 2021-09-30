@@ -5,9 +5,7 @@ import com.company.Commons.DataObjPair;
 import com.company.Commons.NodeCluster;
 import com.company.NodeManager;
 
-import javax.xml.crypto.Data;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
@@ -87,13 +85,15 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
         StringBuilder sb = new StringBuilder();
         sb.append("Ceph Nodes:\n");
         for(CeNode node : globalNodeTable.values()) {
-            sb.append("\t" + node.getName() + "\n");
+            sb.append("\t").append(node.getName()).append("\n");
         }
         return sb.toString();
     }
 
     @Override
     public String listNodeData(String name) {
+        // should be put in "listNodeMeta"
+        // here I simply want to list all data
         if(globalNodeTable.containsKey(name)) {
             StringBuilder sb = new StringBuilder();
             sb.append(globalNodeTable.get(name).getData());
