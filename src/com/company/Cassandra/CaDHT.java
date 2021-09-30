@@ -22,22 +22,6 @@ public class CaDHT implements BasicDHT, NodeManager {
         this.type = "Ca";
     }
 
-    @Override
-    public void setReplica(Long numReplica) {
-        CaCluster.setReplica(numReplica);
-    }
-
-    @Override
-    public void setReplica(Long numReplica, Long minCopy) {
-        CaCluster.setReplica(numReplica);
-        CaCluster.setMinCopy(minCopy);
-    }
-
-    @Override
-    public void setHashRange(Long range) {
-        CaCluster.setHashRange(range);
-    }
-
     private String randomNodeSelect(){
         // randomly return the node name
         int size = this.caCluster.getNameList().size();
@@ -61,10 +45,10 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
-    public String select(Long key) {
+    public DataObjPair select(Long key) {
         String nodeName = randomNodeSelect();
         try{
-            return caCluster.getGlobalNodeTable().get(nodeName).selectData(key).toString();
+            return caCluster.getGlobalNodeTable().get(nodeName).selectData(key);
         } catch (Exception e){
             return null;
         }

@@ -5,12 +5,21 @@ import com.company.Main;
 public abstract class Command {
     protected Main main;
     protected String commandText;
+    protected String usageText;
     protected String description;
     protected int parameterMinimum;
 
     protected Command(Main main, String commandText, String description, int parameterMinimum) {
         this.main = main;
         this.commandText = commandText;
+        this.description = description;
+        this.parameterMinimum = parameterMinimum;
+    }
+
+    protected Command(Main main, String commandText, String description, String usageText, int parameterMinimum) {
+        this.main = main;
+        this.commandText = commandText;
+        this.usageText = usageText;
         this.description = description;
         this.parameterMinimum = parameterMinimum;
     }
@@ -58,6 +67,6 @@ public abstract class Command {
     }
 
     public String getUsage() {
-        return commandText + " <" + parameterMinimum + " parameters>";
+        return description + "\n" + usageText;
     }
 }

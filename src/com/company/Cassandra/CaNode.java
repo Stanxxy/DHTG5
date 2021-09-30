@@ -3,8 +3,6 @@ package com.company.Cassandra;
 import com.company.Commons.DataObjPair;
 import com.company.Commons.Node;
 import com.company.Utils.RingHashTools;
-
-import javax.swing.text.html.parser.Entity;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -55,20 +53,8 @@ public class CaNode extends Node {
         return tableInfo;
     }
 
-    public String getSuccessor() {
-        return successor;
-    }
-
-    public String getPredecessor(){
-        return predecessor;
-    }
-
     public Long getHashValue() {
         return hashValue;
-    }
-
-    public CaCluster getCaCluster() {
-        return caCluster;
     }
 
     private void calculateCapacity(){
@@ -427,6 +413,7 @@ public class CaNode extends Node {
             if(i >= beginHash && i <= endHash && !newMap.containsKey(i)){
                 counter++;
                 DataObjPair obj = oriMap.get(i);
+
                 newMap.put(obj.getKey(), obj);
             }
         }
@@ -487,7 +474,7 @@ public class CaNode extends Node {
             if(this.storedData.containsKey(key)){
                 return 1; // key already exist
             }
-            this.storedData.put(key, new DataObjPair(key, value));
+            this.storedData.put(key, new DataObjPair(key, value, 0L));
             this.load++;
             // also do duplication
             return insertDup(key, value, CaCluster.getReplica());
@@ -517,7 +504,7 @@ public class CaNode extends Node {
                     // go to the self node or have established data
                     return 0;
                 }
-                node.dupStore.put(key, new DataObjPair(key, value));
+                node.dupStore.put(key, new DataObjPair(key, value, CaCluster.getReplica() - dupLeft + 1));
                 return callSuccessor().insertDup(key, value, dupLeft - 1);
             } catch (Exception e){
                 System.out.println(Arrays.toString(e.getStackTrace()));
@@ -564,7 +551,7 @@ public class CaNode extends Node {
         if(RingHashTools.inCurrent(caCluster.getNodeHash(this.predecessor), this.hashValue, key)){
             // simply overwrite the previous data. Here we mimic Redis
             if(this.storedData.get(key) != null){
-                this.storedData.put(key, new DataObjPair(key, value));
+                this.storedData.put(key, new DataObjPair(key, value, 0L));
                 // update dups
                 return updateDup(key, value, CaCluster.getReplica());
             } else {
@@ -601,7 +588,7 @@ public class CaNode extends Node {
                     return 0;
                 }
                 if(node.dupStore.containsKey(key)){
-                    node.dupStore.put(key, new DataObjPair(key, value));
+                    node.dupStore.put(key, new DataObjPair(key, value,  node.dupStore.get(key).getReplicaI()));
                     dupLeft -= 1;
                 }
                 if(callSuccessor() != null){

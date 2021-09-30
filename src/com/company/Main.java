@@ -1,5 +1,9 @@
 package com.company;
 
+import com.company.Commands.Command;
+import com.company.Ceph.CeCluster;
+import com.company.Ceph.CeNode;
+import com.company.Ceph.CephHashTools;
 import com.company.Commands.*;
 
 import java.util.Scanner;
@@ -14,7 +18,6 @@ public class Main {
     // We need to maintain a DHT Object to simulate service
     public BasicDHT foregroundDHT;
     public BasicDHT backgroundDHT;
-
     public NodeManager foregroundManager;
     public NodeManager backgroundManager;
 
@@ -40,6 +43,7 @@ public class Main {
                 new ListNodeData(this),
                 new ListNodeMeta(this),
                 new Quit(this)
+
         };
         helpCommand.setCommands(commands);
         terminal = new Scanner(System.in);
@@ -51,10 +55,17 @@ public class Main {
         run();
     }
 
+    // TODO : A manu method
+
     private void run() {
         while(running) {
             Command.printMenu(commands);
-            Command.runLine(commands, terminal.nextLine());
+            try {
+                Command.runLine(commands, terminal.nextLine());
+            } catch(Exception e) {
+                e.printStackTrace();
+                // haha the command ran but messed up... try again!
+            }
         }
     }
 

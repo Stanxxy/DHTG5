@@ -1,31 +1,59 @@
 package com.company.Commands;
 
+import com.company.Cassandra.CaNode;
+import com.company.Commons.Node;
+import com.company.Commons.NodeCluster;
 import com.company.Commons.NodeFactory;
 import com.company.Main;
+import com.company.Ceph.CeCluster;
+import com.company.Ceph.CeNode;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeMap;
 
 public class SetClusterMeta extends Command{
     public SetClusterMeta(Main main) {
-        super(main, "sm", "set the meta data for a cluster. " +
-                "<init_node_num> <replica> <hashRange> [<min_copy>]", 3);
+        super(main, "sm",
+                "set the metadata for the cluster",
+                "sm <init_node_num> <replica> <hashRange> [<min_copy>] [<weight>] [<weight>] ...",
+                3
+        );
     }
 
     @Override
     protected void runOnLine(String[] args) {
+        String type = main.foregroundDHT.getName();
 
         Integer nodeNum = Integer.parseInt(args[1]);
         Long replica = Long.parseLong(args[2]);
         Long hashRange = Long.parseLong(args[3]);
 
-        main.foregroundManager.setHashRange(hashRange);
-
-        if(args.length == 5){
-            Long min_copy = Long.parseLong(args[4]);
-            main.foregroundManager.setReplica(replica, min_copy);
-        } else {
-            main.foregroundManager.setReplica(replica);
+        NodeCluster.setHashRange(hashRange);
+        if(type.equals("CaDHT")) {
+            NodeCluster.setReplica(replica);
+            if(args.length == 5) {
+                Long min_copy = Long.parseLong(args[4]);
+                NodeCluster.setMinCopy(min_copy);
+            }
+            NodeFactory.initializeNodes("Ca", nodeNum, null);
         }
+        else if(type.equals("CeCluster") && args.length >= 5) {
+            NodeCluster.setReplica(replica);
+            String[] weightStrings = Arrays.copyOfRange(args, 4, args.length);
+            Double[] weights = new Double[weightStrings.length];
+            for(int i = 0; i < weightStrings.length; i ++) {
+                weights[i] = Double.parseDouble(weightStrings[i]);
+            }
 
-        if(main.foregroundDHT.getName().equals("CaDHT"))
-        NodeFactory.initializeNodes("Ca", nodeNum);
+            List<Node> nodes = NodeFactory.initializeNodes("Ce", nodeNum, weights);
+            TreeMap<String, CeNode> nodeTree = new TreeMap<>();
+            for(Node node : nodes) {
+                nodeTree.put(node.getName(), (CeNode) node);
+            }
+            CeCluster cluster = (CeCluster) main.foregroundDHT;
+            cluster.setGlobalNodeTable(nodeTree);
+        }
+        System.out.println("Successfully updated Cluster Meta");
     }
 }

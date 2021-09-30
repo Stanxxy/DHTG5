@@ -5,26 +5,44 @@ import com.company.Cassandra.CaCluster;
 import com.company.Cassandra.CaDHT;
 import com.company.Main;
 import com.company.NodeManager;
+import com.company.Ceph.CeCluster;
+
+import java.util.TreeMap;
 
 public class SelectDHT extends Command {
     public SelectDHT(Main main) {
-        super(main, "s", "select a DHT type", 0);
+        super(main, "s",
+                "select a DHT type (\"Ca\" for Cassandra, \"Ce\" for Ceph)",
+                "s <type>",
+                1
+        );
     }
 
     @Override
     protected void runOnLine(String[] args) {
-        System.out.print("Please input the type of DHT you want. Ca for Cassandra and Ce for Ceph: ");
-        String type = main.getScanner().nextLine();
-        if(type.equals("Ca")){
-            if(main.backgroundDHT == null){
+        String type = args[1];
+        if(type.equals("Ca")) {
+            if(main.backgroundDHT == null) {
                 CaDHT dhtObj = new CaDHT(CaCluster.getCluster());
                 main.foregroundDHT = dhtObj;
                 main.foregroundManager = dhtObj;
-            } else if(!main.foregroundDHT.getName().equals("CaDHT")){
+                System.out.println("Selected Cassandra");
+            }
+            else if(!main.foregroundDHT.getName().equals("CaDHT")) {
                 swap();
+                System.out.println("Swapping to Cassandra");
             }
         } else if(type.equals("Ce")) {
-            // ## do your own code here ##
+            if(main.backgroundDHT == null) {
+                CeCluster cluster = new CeCluster(new TreeMap<>());
+                main.foregroundDHT = cluster;
+                main.foregroundManager = cluster;
+                System.out.println("Selected Ceph");
+            }
+            else if(!main.foregroundDHT.getName().equals("CeCluster")) {
+                swap();
+                System.out.println("Swapping to Ceph");
+            }
         } else {
             System.out.println("No such DHT type exists");
         }
