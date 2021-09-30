@@ -1,4 +1,4 @@
-package com.company.Commands;
+package com.company.commands;
 
 import com.company.Main;
 
@@ -11,6 +11,5 @@ public class Delete extends Command {
     protected void runOnLine(String[] args) {
         Long key = Long.parseLong(args[1]);
 
-        main.foregroundDHT.delete(key);
     }
 }

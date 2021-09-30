@@ -1,4 +1,4 @@
-package com.company.Commands;
+package com.company.commands;
 
 import com.company.Main;
 
@@ -15,7 +15,7 @@ public class Help extends Command {
 
         for(Command command : commands) {
             if(command.checkCalled(commandToHelp)) {
-                System.out.println("Usage: \"" + command.getUsage() + "\"");
+                System.out.println("Usage: " + command.getUsage());
             }
         }
     }

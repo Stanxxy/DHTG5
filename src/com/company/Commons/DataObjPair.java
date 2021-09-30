@@ -3,6 +3,7 @@ package com.company.Commons;
 
 public class DataObjPair {
     Long key;
+    Long replicaI;
     String value;
 
     public Long getKey() {
@@ -25,13 +26,35 @@ public class DataObjPair {
         this.value = value;
     }
 
+    public Long getReplicaI() { return replicaI; }
+
+    public void setReplicaI(Long replicaI) {
+        this.replicaI = replicaI;
+    }
+
     public DataObjPair(){
 
+    }
+
+    public DataObjPair(Long search) {
+        this.key = search;
     }
 
     public DataObjPair(Long key, String value) {
         this.key = key;
         this.value = value;
+        this.replicaI = 0L;
+    }
+
+    public DataObjPair(Long key, String value, Long replicaI) {
+        this.key = key;
+        this.value = value;
+        this.replicaI = replicaI;
+    }
+
+    public DataObjPair replicate(Long replicaI) {
+        DataObjPair replication = new DataObjPair(key, value, replicaI);
+        return replication;
     }
 
     @Override
@@ -39,6 +62,7 @@ public class DataObjPair {
         return "DataObjPair{" +
                 "key=" + key +
                 ", value='" + value + '\'' +
+                ", replicaI='" + replicaI + "'" +
                 '}';
     }
 }
