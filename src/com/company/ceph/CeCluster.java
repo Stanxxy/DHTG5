@@ -5,18 +5,19 @@ import com.company.Commons.DataObjPair;
 import com.company.Commons.NodeCluster;
 import com.company.NodeManager;
 
+import javax.xml.crypto.Data;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeManager {
     public CeCluster(TreeMap<String, CeNode> nodes) {
         super(nodes);
 
-        for(CeNode node : nodes.values()) {
-            node.setCluster(this);
-        }
+        setGlobalNodeTable(nodes);
 
         try {
             CephHashTools.initialize();
@@ -28,18 +29,28 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     @Override
     public boolean insert(Long key, String value) {
         DataObjPair data = new DataObjPair(key, value);
-        CephHashTools.computeDataLocation(this, data).insert(data);
-
-        for(int i = 1; i < replicas; i ++) {
-            DataObjPair replicaI = data.replicate(Long.valueOf(i));
-            CephHashTools.computeDataLocation(this, replicaI).insert(replicaI);
+        try {
+            CeNode location = CephHashTools.computeDataLocation(this, data);
+            return location.insert(data);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
     @Override
-    public boolean select(Long key) {
-        return false;
+    public DataObjPair select(Long key) {
+        for(int i = 0; i < NodeCluster.getReplica(); i ++) {
+            DataObjPair search = new DataObjPair(key);
+            search.setReplicaI((long) i);
+            CeNode location = CephHashTools.computeDataLocation(this, search);
+            DataObjPair result = location.select(search);
+
+            if(result != null) {
+                return result;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -100,5 +111,14 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     @Override
     public void loadBalancing(String name) {
 
+    }
+
+    @Override
+    public void setGlobalNodeTable(Map<String, CeNode> nodes) {
+        this.globalNodeTable = nodes;
+
+        for(CeNode node : nodes.values()) {
+            node.setCluster(this);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.company.ceph;
 
 import com.company.Commons.DataObjPair;
 import com.company.Commons.Node;
+import com.company.Commons.NodeCluster;
 import com.company.issuables.Insert;
 
 import java.util.HashMap;
@@ -31,9 +32,40 @@ public class CeNode extends Node {
         );
     }
 
-    public boolean insert(DataObjPair data) {
-        storedData.put(data.getKey(), data);
-        return true;
+    public boolean insert(DataObjPair data) throws ExecutionException, InterruptedException, TimeoutException {
+        if(!storedData.containsKey(data.getKey())) {
+            storedData.put(data.getKey(), data);
+
+            for(int i = 1; i < NodeCluster.getReplica(); i ++) {
+                DataObjPair replicaI = data.replicate(Long.valueOf(i));
+                CephHashTools.computeDataLocation(cluster, replicaI).issueInsert(replicaI);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public DataObjPair select(DataObjPair search) {
+        if(storedData.containsKey(search.getKey())) {
+            return storedData.get(search.getKey());
+        }
+        return null;
+    }
+
+    public boolean update(Long key, String newValue) {
+        if(storedData.containsKey(key)) {
+            storedData.get(key).setValue(newValue);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean delete(Long key) {
+        if(storedData.containsKey(key)) {
+            storedData.remove(key);
+            return true;
+        }
+        return false;
     }
 
     //
@@ -43,8 +75,6 @@ public class CeNode extends Node {
         }
         return true;
     }
-
-
 
     public Long getIndex() {
         return index;

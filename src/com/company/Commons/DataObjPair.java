@@ -36,6 +36,10 @@ public class DataObjPair {
 
     }
 
+    public DataObjPair(Long search) {
+        this.key = search;
+    }
+
     public DataObjPair(Long key, String value) {
         this.key = key;
         this.value = value;

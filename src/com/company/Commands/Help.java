@@ -15,7 +15,7 @@ public class Help extends Command {
 
         for(Command command : commands) {
             if(command.checkCalled(commandToHelp)) {
-                System.out.println("Usage: \"" + command.getUsage() + "\"");
+                System.out.println("Usage: " + command.getUsage());
             }
         }
     }

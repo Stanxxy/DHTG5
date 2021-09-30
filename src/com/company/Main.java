@@ -33,6 +33,8 @@ public class Main {
                 new ListAllNodes(this),
                 new ListNodeData(this),
                 new Quit(this),
+                new Insert(this),
+                new Retrieve(this),
         };
         helpCommand.setCommands(commands);
         terminal = new Scanner(System.in);
@@ -49,7 +51,12 @@ public class Main {
     private void run() {
         while(running) {
             Command.printMenu(commands);
-            Command.runLine(commands, terminal.nextLine());
+            try {
+                Command.runLine(commands, terminal.nextLine());
+            } catch(Exception e) {
+                e.printStackTrace();
+                // haha the command ran but messed up... try again!
+            }
         }
     }
 

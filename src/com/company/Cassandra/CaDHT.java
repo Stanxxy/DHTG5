@@ -50,13 +50,13 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
-    public boolean select(Long key) {
+    public DataObjPair select(Long key) {
         String nodeName = randomNodeSelect();
         try{
             caCluster.getGlobalNodeTable().get(nodeName).selectData(key);
-            return true;
+            return null;
         } catch (Exception e){
-            return false;
+            return null;
         }
     }
 
