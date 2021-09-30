@@ -3,6 +3,9 @@ package com.company.Cassandra;
 import com.company.Commons.DataObjPair;
 import com.company.Commons.Node;
 import com.company.Utils.RingHashTools;
+
+import javax.xml.crypto.Data;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -338,6 +341,8 @@ public class CaNode extends Node {
                 return 0L;
             }
             Map<Long, DataObjPair> sucMap = node.callSuccessor().storedData;
+            System.out.println(String.format("The following data copied from %s to %s ", source, node.getName()));
+            System.out.println("-----------------------------------------------");
             if(endHash < beginHash){
                 // values in [beginHash, maxHash] /cup [0, endHash]
                 counter += filteredMapSync(sucMap, node.storedData, beginHash, CaCluster.getHashRange() - 1);
@@ -350,6 +355,8 @@ public class CaNode extends Node {
                 return 0L;
             }
             Map<Long, DataObjPair> predMap = node.callPredecessor().storedData;
+            System.out.println(String.format("The following data copied from %s to %s ", source, node.getName()));
+            System.out.println("-----------------------------------------------");
             if(endHash < beginHash){
                 // values in [beginHash, maxHash] /cup [0, endHash]
                 counter += filteredMapSync(predMap, node.storedData, beginHash, CaCluster.getHashRange() - 1);
@@ -373,6 +380,8 @@ public class CaNode extends Node {
             }
             if(dupLeft.equals(CaCluster.getReplica())){
                 Map<Long, DataObjPair> sucMap = node.callSuccessor().dupStore;
+                System.out.println(String.format("The following replica copied from %s to %s ", source, node.getName()));
+                System.out.println("-----------------------------------------------");
                 if(endHash < beginHash){
                     // values in [beginHash, maxHash] /cup [0, endHash]
                     node.filteredMapSync(sucMap, node.dupStore, beginHash, CaCluster.getHashRange() - 1);
@@ -392,6 +401,8 @@ public class CaNode extends Node {
                 }
             } else {
                 Map<Long, DataObjPair> predMap = node.callPredecessor().dupStore;
+                System.out.println(String.format("The following replica copied from %s to %s ", source, node.getName()));
+                System.out.println("-----------------------------------------------");
                 if(endHash < beginHash){
                     // values in [beginHash, maxHash] /cup [0, endHash]
                     node.filteredMapSync(predMap, node.dupStore, beginHash, CaCluster.getHashRange() - 1);
@@ -399,6 +410,7 @@ public class CaNode extends Node {
                 } else {
                     node.filteredMapSync(predMap, node.dupStore, beginHash, endHash);
                 }
+                System.out.println("-----------------------------------------------");
             }
         }
     }
@@ -413,7 +425,7 @@ public class CaNode extends Node {
             if(i >= beginHash && i <= endHash && !newMap.containsKey(i)){
                 counter++;
                 DataObjPair obj = oriMap.get(i);
-
+                System.out.println(obj);
                 newMap.put(obj.getKey(), obj);
             }
         }
@@ -422,6 +434,8 @@ public class CaNode extends Node {
 
     public Long dumpData(CaNode node, Long beginHash, Long endHash){
         Long counter = 0L;
+        System.out.println(String.format("The following data removed from %s", node.getName()));
+        System.out.println("-----------------------------------------------");
         if(endHash < beginHash){
             // values in [beginHash, maxHash] /cup [0, endHash]
             counter += node.filteredMapRemove(node.storedData, beginHash, CaCluster.getHashRange() - 1);
@@ -429,11 +443,14 @@ public class CaNode extends Node {
         } else {
             counter += node.filteredMapRemove(node.storedData, beginHash, endHash);
         }
+        System.out.println("-----------------------------------------------");
         return counter;
     }
 
     public void dumpDup(CaNode node, Long beginHash, Long endHash, Long dupLeft){
         if(dupLeft == 0){
+            System.out.println(String.format("The following replica removed from %s", node.getName()));
+            System.out.println("-----------------------------------------------");
             // from successor
             if(endHash < beginHash){
                 // values in [beginHash, maxHash] /cup [0, endHash]
@@ -442,6 +459,7 @@ public class CaNode extends Node {
             } else {
                 node.filteredMapRemove(node.dupStore, beginHash, endHash);
             }
+            System.out.println("-----------------------------------------------");
         } else {
             if(node.callSuccessor() == null){
                 return;
@@ -459,6 +477,7 @@ public class CaNode extends Node {
             Map.Entry<Long, DataObjPair> entry = itor.next();
             if(entry.getKey() >= beginHash && entry.getKey() <= endHash){
                 counter++;
+                System.out.println(entry.getValue());
                 itor.remove();
             }
         }
@@ -474,7 +493,9 @@ public class CaNode extends Node {
             if(this.storedData.containsKey(key)){
                 return 1; // key already exist
             }
-            this.storedData.put(key, new DataObjPair(key, value, 0L));
+            DataObjPair obj = new DataObjPair(key, value, 0L);
+            System.out.println(String.format("Data %s inserted in  %s", obj, this.getName()));
+            this.storedData.put(key, obj);
             this.load++;
             // also do duplication
             return insertDup(key, value, CaCluster.getReplica());
@@ -504,7 +525,9 @@ public class CaNode extends Node {
                     // go to the self node or have established data
                     return 0;
                 }
-                node.dupStore.put(key, new DataObjPair(key, value, CaCluster.getReplica() - dupLeft + 1));
+                DataObjPair obj = new DataObjPair(key, value, CaCluster.getReplica() - dupLeft + 1);
+                System.out.println(String.format("Replica %s inserted in  %s", obj, this.node.getName()));
+                node.dupStore.put(key, obj);
                 return callSuccessor().insertDup(key, value, dupLeft - 1);
             } catch (Exception e){
                 System.out.println(Arrays.toString(e.getStackTrace()));
@@ -530,9 +553,11 @@ public class CaNode extends Node {
             }
             if(RingHashTools.inCurrent(caCluster.getNodeHash(this.predecessor), this.hashValue, key)){
                 // simply overwrite the previous data. Here we mimic Redis
+                System.out.println(String.format("Retrieved from original data %s", this.getName()));
                 return this.storedData.get(key);
             } else {
                 if(this.dupStore.containsKey(key)){
+                    System.out.println(String.format("Retrieved from replica data %s", this.getName()));
                     return this.dupStore.get(key);
                 }
                 System.out.println(String.format("Sent to next node %s", callSuccessor().name));
@@ -551,7 +576,9 @@ public class CaNode extends Node {
         if(RingHashTools.inCurrent(caCluster.getNodeHash(this.predecessor), this.hashValue, key)){
             // simply overwrite the previous data. Here we mimic Redis
             if(this.storedData.get(key) != null){
-                this.storedData.put(key, new DataObjPair(key, value, 0L));
+                DataObjPair obj = new DataObjPair(key, value, 0L);
+                System.out.println(String.format("Data %s updated in  %s", obj, this.getName()));
+                this.storedData.put(key, obj);
                 // update dups
                 return updateDup(key, value, CaCluster.getReplica());
             } else {
@@ -588,7 +615,9 @@ public class CaNode extends Node {
                     return 0;
                 }
                 if(node.dupStore.containsKey(key)){
-                    node.dupStore.put(key, new DataObjPair(key, value,  node.dupStore.get(key).getReplicaI()));
+                    DataObjPair obj = new DataObjPair(key, value,  node.dupStore.get(key).getReplicaI());
+                    System.out.println(String.format("Replica %s updated in  %s", obj, node.getName()));
+                    node.dupStore.put(key, obj);
                     dupLeft -= 1;
                 }
                 if(callSuccessor() != null){
@@ -618,6 +647,7 @@ public class CaNode extends Node {
         }
         if(RingHashTools.inCurrent(caCluster.getNodeHash(this.predecessor), this.hashValue, key)){
             // simply overwrite the previous data. Here we mimic Redis
+            System.out.println(String.format("Data %s removed from  %s", this.storedData.get(key), this.getName()));
             DataObjPair obj = this.storedData.remove(key);
             if(obj != null) {
                 this.load--;
@@ -652,6 +682,7 @@ public class CaNode extends Node {
                     return 0;
                 }
                 if(node.dupStore.containsKey(key)){
+                    System.out.println(String.format("Replica %s removed from  %s", node.dupStore.get(key), node.getName()));
                     node.dupStore.remove(key);
                     dupLeft -= 1;
                 }
