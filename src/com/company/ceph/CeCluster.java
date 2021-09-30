@@ -4,8 +4,10 @@ import com.company.BasicDHT;
 import com.company.Commons.DataObjPair;
 import com.company.Commons.NodeCluster;
 import com.company.NodeManager;
+import com.sun.source.tree.Tree;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
@@ -27,11 +29,11 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     @Override
     public boolean insert(Long key, String value) {
         DataObjPair data = new DataObjPair(key, value);
-        boolean success = CephHashTools.computeDataLocation(this, data).insert(data);
+        boolean success = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), data).insert(data);
 
         for(int i = 1; i < NodeCluster.getReplica(); i ++) {
             DataObjPair replicaI = data.replicate(Long.valueOf(i));
-            CephHashTools.computeDataLocation(this, replicaI).insert(replicaI);
+            CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), replicaI).insert(replicaI);
         }
         return success;
     }
@@ -41,7 +43,7 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
         DataObjPair search = new DataObjPair(key);
         for(int i = 0; i < NodeCluster.getReplica(); i ++) {
             search.setReplicaI((long) i);
-            CeNode location = CephHashTools.computeDataLocation(this, search);
+            CeNode location = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), search);
             DataObjPair result = location.select(search);
 
             if(result != null) {
@@ -57,7 +59,7 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
         boolean success = false;
         for(int i = 0; i < NodeCluster.getReplica(); i ++) {
             search.setReplicaI((long) i);
-            CeNode location = CephHashTools.computeDataLocation(this, search);
+            CeNode location = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), search);
             success = location.update(key, value) || success;
         }
         return success;
@@ -69,7 +71,7 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
         DataObjPair search = new DataObjPair(key);
         for(int i = 0; i < NodeCluster.getReplica(); i ++) {
             search.setReplicaI((long) i);
-            CeNode location = CephHashTools.computeDataLocation(this, search);
+            CeNode location = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), search);
             success = location.delete(key) || success;
         }
         return success;
@@ -133,13 +135,37 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     }
 
     @Override
-    public void removeNode(String name) {
+    public boolean removeNode(String name) {
+        if(globalNodeTable.containsKey(name)) {
+            TreeMap<String, CeNode> newTopology = new TreeMap<>(globalNodeTable);
+            newTopology.remove(name);
 
+            ArrayList<MovingDataObj> toMove = new ArrayList<>();
+            for (CeNode node : globalNodeTable.values()) {
+                toMove.addAll(node.shuffle(newTopology.values()));
+            }
+
+            for (MovingDataObj moving : toMove) {
+                moving.getAddress().insert(moving.getData());
+            }
+            globalNodeTable.remove(name);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void unplugNode(String name) {
+        globalNodeTable.remove(name);
+        System.out.println("Detected node failure, balancing...");
+        ArrayList<MovingDataObj> toMove = new ArrayList<>();
+        for (CeNode node : globalNodeTable.values()) {
+            toMove.addAll(node.shuffle(globalNodeTable.values()));
+        }
 
+        for (MovingDataObj moving : toMove) {
+            moving.getAddress().insert(moving.getData());
+        }
     }
 
     @Override

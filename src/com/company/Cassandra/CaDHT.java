@@ -134,11 +134,13 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
-    public void removeNode(String name) {
+    public boolean removeNode(String name) {
         try{
             caCluster.getGlobalNodeTable().get(name).shutdownNode(false);
+            return true;
         } catch (Exception e){
             System.out.println("shutdown Fail.\n" + Arrays.toString(e.getStackTrace()));
+            return false;
         }
     }
 

@@ -5,7 +5,10 @@ import com.company.Commons.Node;
 import com.company.Commons.NodeCluster;
 import com.company.issuables.Insert;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.*;
 
 public class CeNode extends Node {
@@ -54,11 +57,18 @@ public class CeNode extends Node {
     }
 
     //
-    public boolean shuffle() {
-        for(Long key : storedData.keySet()) {
-
+    public List<MovingDataObj> shuffle(Collection<CeNode> nodes) {
+        ArrayList<MovingDataObj> toMove = new ArrayList<>();
+        for(DataObjPair data : storedData.values()) {
+            CeNode destination = CephHashTools.computeDataLocation(nodes, data);
+            if(!destination.equals(this)) {
+                toMove.add(new MovingDataObj(destination, data));
+            }
         }
-        return true;
+        for(MovingDataObj data : toMove) {
+            delete(data.getData().getKey());
+        }
+        return toMove;
     }
 
     public Long getIndex() {

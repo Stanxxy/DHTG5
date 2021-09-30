@@ -7,7 +7,7 @@ public interface NodeManager {
     String debug();
     void addNode(String name);
     void addNode(String name, Long hashValue);
-    void removeNode(String name);
+    boolean removeNode(String name);
     void unplugNode(String name);
     void loadBalancing(String name);
 }

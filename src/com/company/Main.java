@@ -43,8 +43,8 @@ public class Main {
                 new ListNodeData(this),
                 new ListNodeMeta(this),
                 new Debug(this),
-                new Quit(this)
-
+                new Quit(this),
+                new TestCeph(this),
         };
         helpCommand.setCommands(commands);
         terminal = new Scanner(System.in);

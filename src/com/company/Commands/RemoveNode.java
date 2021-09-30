@@ -11,6 +11,12 @@ public class RemoveNode extends Command{
     protected void runOnLine(String[] args) {
         String name = args[1];
 
-        main.foregroundManager.removeNode(name);
+        System.out.println("Removing node " + name + "...");
+        if(main.foregroundManager.removeNode(name)) {
+            System.out.println("Removed!");
+        }
+        else {
+            System.out.println("Failed to remove!");
+        }
     }
 }
