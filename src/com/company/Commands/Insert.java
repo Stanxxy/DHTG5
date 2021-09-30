@@ -1,4 +1,4 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
@@ -18,7 +18,7 @@ public class Insert extends Command {
         String[] arrayOfSplitValue = Arrays.copyOfRange(args, 2, args.length);
         StringBuilder valueBuilder = new StringBuilder();
         for(String split : arrayOfSplitValue) {
-            valueBuilder.append(split + " ");
+            valueBuilder.append(split).append(" ");
         }
         String value = valueBuilder.toString();
 

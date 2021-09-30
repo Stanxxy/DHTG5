@@ -1,9 +1,7 @@
 package com.company.issuables;
 
 import com.company.Commons.DataObjPair;
-import com.company.ceph.CeNode;
-
-import java.util.concurrent.Callable;
+import com.company.Ceph.CeNode;
 
 public class Insert extends Issuable<Boolean> {
     private DataObjPair toInsert;

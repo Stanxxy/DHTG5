@@ -11,7 +11,7 @@ public class CaCluster extends NodeCluster<CaNode> {
         return getGlobalNodeTable().get(name).getHashValue();
     }
 
-    public String searchForTheNearestAlive(String nodeName, int direction){
+    public String searchForTheNearestAlive(String nodeName, String downName, int direction){
         // search for the nearest live node in the direction
 
         // here we ensure the node is not null
@@ -22,7 +22,7 @@ public class CaCluster extends NodeCluster<CaNode> {
         CaNode ansNode;
         if(direction == 1){
             // 1 denotes search on successor
-            String nextNode = this.getGlobalNodeTable().get(node).getSuccessor();
+            String nextNode = node.getTableInfo().get(downName)[1];
             ansNode = globalNodeTable.get(nextNode);
             while (ansNode == null){
                 nextNode = node.getTableInfo().get(nextNode)[1]; // get the successor
@@ -30,7 +30,7 @@ public class CaCluster extends NodeCluster<CaNode> {
             }
         } else {
             // 0 denotes search on predecessor
-            String nextNode = this.getGlobalNodeTable().get(node).getPredecessor();
+            String nextNode = node.getTableInfo().get(downName)[0];
             ansNode = globalNodeTable.get(nextNode);
             while (ansNode == null){
                 nextNode = node.getTableInfo().get(nextNode)[0]; // get the successor

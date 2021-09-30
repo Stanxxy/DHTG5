@@ -1,4 +1,4 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
@@ -11,5 +11,7 @@ public class Update extends Command {
     protected void runOnLine(String[] args) {
         Long key = Long.parseLong(args[1]);
         String newValue = args[2];
+
+        main.foregroundDHT.update(key, newValue);
     }
 }

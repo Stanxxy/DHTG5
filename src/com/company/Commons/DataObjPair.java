@@ -53,8 +53,7 @@ public class DataObjPair {
     }
 
     public DataObjPair replicate(Long replicaI) {
-        DataObjPair replication = new DataObjPair(key, value, replicaI);
-        return replication;
+        return new DataObjPair(key, value, replicaI);
     }
 
     @Override

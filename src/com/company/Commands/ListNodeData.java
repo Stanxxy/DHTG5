@@ -1,11 +1,11 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
 public class ListNodeData extends Command{
 
     public ListNodeData(Main main) {
-        super(main, "ln", "list the meta data of node", 1);
+        super(main, "ln", "list the stored data of node", 1);
     }
 
     @Override

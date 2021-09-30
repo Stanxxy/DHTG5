@@ -1,10 +1,10 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
 public class UnplugNode extends Command{
     public UnplugNode(Main main){
-        super(main, "u", "unplug a db node from the cluster", 1);
+        super(main, "un", "unplug a db node from the cluster", 1);
     }
 
     @Override

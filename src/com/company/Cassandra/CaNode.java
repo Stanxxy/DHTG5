@@ -3,7 +3,6 @@ package com.company.Cassandra;
 import com.company.Commons.DataObjPair;
 import com.company.Commons.Node;
 import com.company.Utils.RingHashTools;
-
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -27,20 +26,23 @@ public class CaNode extends Node {
 
     public CaNode(String name, Long hash, List<String> seeds) {
 
+
         this.name = name;
+        this.load = 0L;
+        this.caCluster = CaCluster.getCluster(); // static method, singleton
+
         this.hashValue = hash == null ? RingHashTools.hashNode(name, CaCluster.getHashRange()) : hash;
 
         this.successor = findSuccessor(seeds); // find successor node
         this.predecessor = findPredecessor(seeds); // find predecessor node
 
-        this.storedData = new HashMap<>(); // load data from previous node
-        this.dupStore = new HashMap<>(); // load dup from previous node
+        calculateCapacity();
+
+        this.storedData = new HashMap<>(); // initialize the stored data container
+        this.dupStore = new HashMap<>(); // initialize the replica repo
         initDataAndDup();
 
-        this.caCluster = CaCluster.getCluster(); // static method, singleton
-        this.capacity = this.predecessor == null ? CaCluster.getHashRange() :
-                (this.hashValue - callPredecessor().hashValue
-                        + CaCluster.getHashRange()) % CaCluster.getHashRange();
+        this.tableInfo = new HashMap<>();
         initTableInfo();
 
         this.asyncPool = new ThreadPoolExecutor(4, 8, 30,
@@ -51,20 +53,20 @@ public class CaNode extends Node {
         return tableInfo;
     }
 
-    public String getSuccessor() {
-        return successor;
-    }
-
-    public String getPredecessor(){
-        return predecessor;
-    }
-
     public Long getHashValue() {
         return hashValue;
     }
 
-    public CaCluster getCaCluster() {
-        return caCluster;
+    private void calculateCapacity(){
+        if(this.predecessor == null || callPredecessor() == null){
+            String nearestAlivePred = callSuccessor() == null ? null :
+                    caCluster.searchForTheNearestAlive(this.successor, this.successor, 0);
+            this.capacity = nearestAlivePred == null ? CaCluster.getHashRange() :
+                    RingHashTools.hashDistance(caCluster.getNodeHash(nearestAlivePred), hashValue, CaCluster.getHashRange());
+        } else {
+            this.capacity = (this.hashValue - callPredecessor().hashValue
+                    + CaCluster.getHashRange()) % CaCluster.getHashRange();
+        }
     }
 
     private String findSuccessor(List<String> seeds){
@@ -98,6 +100,8 @@ public class CaNode extends Node {
     }
 
     private void initTableInfo(){
+
+        this.caCluster.getGlobalNodeTable().put(this.name, this);
         for(Map.Entry<String, CaNode> entry : caCluster.getGlobalNodeTable().entrySet()){
             this.tableInfo.put(entry.getKey(),
                     new String[]{entry.getValue().predecessor, entry.getValue().successor});
@@ -110,24 +114,29 @@ public class CaNode extends Node {
             return; // the initial node
         }
         Long beginHash = (callPredecessor().hashValue + 1) % CaCluster.getHashRange();
-        // load data from successor
-        Long moveNum = this.loadData(beginHash, hashValue, this.successor);
-        // remove data from successor
-        Long removeNum = callSuccessor().dumpData(beginHash, hashValue);
-        // load replica into successor from its successor
-        callSuccessor().loadDup(beginHash, hashValue, callSuccessor().successor, CaCluster.getReplica());
-        // remove replica from the very last node
-        callSuccessor().dumpDup(beginHash, hashValue, CaCluster.getReplica());
-        // increase the node load
-        this.load += moveNum;
-        // decrease the successor load
-        callSuccessor().load -= removeNum;
-        // update capacity of successor
-        callSuccessor().capacity -= RingHashTools.hashDistance(beginHash, hashValue, CaCluster.getHashRange());
         // tell predecessor the node is online
         callSuccessor().predecessor = this.name;
         // tell successor the node is online
         callPredecessor().successor = this.name;
+        // load data from successor
+        Long moveNum = this.loadData(this, beginHash, hashValue, this.successor);
+        // remove data from successor
+        Long removeNum = callSuccessor() == null ? 0 : callSuccessor().dumpData(callSuccessor(), beginHash, hashValue);
+
+        if(callSuccessor() != null){
+            // load replica into successor from its successor
+            callSuccessor().loadDup(callSuccessor(), beginHash, hashValue, callSuccessor().successor, CaCluster.getReplica());
+            // remove replica from the very last node
+            callSuccessor().dumpDup(callSuccessor(), beginHash, hashValue, CaCluster.getReplica());
+        }
+        // increase the node load
+        this.load += moveNum;
+        if(callSuccessor() != null){
+            // decrease the successor load
+            callSuccessor().load -= removeNum;
+            // update capacity of successor
+            callSuccessor().capacity -= RingHashTools.hashDistance(beginHash, hashValue, CaCluster.getHashRange());
+        }
     }
 
     public void shutdownNode(boolean force) throws InterruptedException, ExecutionException, TimeoutException {
@@ -136,46 +145,96 @@ public class CaNode extends Node {
         }
         if(force){
             caCluster.getGlobalNodeTable().remove(this.name); // denotes the node has died
-            String nearestAlivePred = caCluster.searchForTheNearestAlive(callSuccessor().name, 0);
-            String nearestAliveSuc = caCluster.searchForTheNearestAlive(callPredecessor().name, 1);
-            callSuccessor().predecessor = callSuccessor().name.equals(nearestAlivePred) ? null : nearestAlivePred;
-            callPredecessor().successor = callPredecessor().name.equals(nearestAliveSuc) ? null : nearestAliveSuc;
+
+            if(callSuccessor() != null){
+                callSuccessor().predecessor = null;
+            }
+            if(callPredecessor() != null){
+                callPredecessor().successor = null;
+            }
+            String nearestAlivePred = caCluster.searchForTheNearestAlive(this.successor, this.name, 0);
+            String nearestAliveSuc = caCluster.searchForTheNearestAlive(this.predecessor, this.name, 1);
+            if(callSuccessor() != null){
+                callSuccessor().predecessor = callSuccessor().name.equals(nearestAlivePred) ? null : nearestAlivePred;
+            }
+            if(callPredecessor() != null){
+                callPredecessor().successor = callPredecessor().name.equals(nearestAliveSuc) ? null : nearestAliveSuc;
+            }
             // then do data movement
-            if(nearestAlivePred == null){ // only a single node is left
-                for(Map.Entry<Long, DataObjPair> entry : callSuccessor().dupStore.entrySet()){
-                    callSuccessor().insertData(entry.getKey(), entry.getValue().getValue());
+            if(callSuccessor() != null){
+                if(nearestAlivePred == null){ // only one single node left
+                    Long moveNum = 0L;
+                    for(Map.Entry<Long, DataObjPair> entry : callSuccessor().dupStore.entrySet()){
+                        if(!callSuccessor().storedData.containsKey(entry.getKey())){
+                            moveNum++;
+                            callSuccessor().insertData(entry.getKey(), entry.getValue().getValue());
+                        }
+                    }
+                    callSuccessor().dupStore.clear(); // no need to replicate anything
+                    callSuccessor().load += moveNum;
+                    callSuccessor().capacity = CaCluster.getHashRange();
+                } else { // if we have multiple nodes
+                    Long beginHash = caCluster.getGlobalNodeTable().get(nearestAlivePred).hashValue + 1;
+                    Long endHash = callSuccessor().hashValue;
+                    // do the recovery we do not take care of replica
+                    Long moveNum = 0L;
+                    if(beginHash > endHash){
+                        moveNum += filteredMapSync(callSuccessor().dupStore,
+                                callSuccessor().storedData,
+                                beginHash,
+                                CaCluster.getHashRange() - 1);
+                        moveNum += filteredMapSync(callSuccessor().dupStore,
+                                callSuccessor().storedData,
+                                0L,
+                                beginHash);
+                    } else {
+                        moveNum += filteredMapSync(callSuccessor().dupStore,
+                                callSuccessor().storedData,
+                                beginHash,
+                                endHash);
+                    }
+
+                    if(callSuccessor().callSuccessor() != null){
+                        // the very last node load replica from the predecessor
+                        callSuccessor().callSuccessor().loadDup(
+                                callSuccessor().callSuccessor(), beginHash, endHash, this.successor,
+                                Math.max(CaCluster.getReplica() -1, 0));
+                        // remove the replica data from successor
+                        callSuccessor().dumpDup(callSuccessor(), beginHash, endHash, 0L);
+                    }
+
+                    callSuccessor().capacity = RingHashTools.hashDistance(beginHash, endHash, CaCluster.getHashRange());
+                    callSuccessor().load += moveNum;
                 }
-                callSuccessor().dupStore.clear(); // no need to dup anything
-            } else { // if we have multiple nodes
-                Long startHash = caCluster.getGlobalNodeTable().get(nearestAlivePred).hashValue;
-                Long endHash = callSuccessor().hashValue;
-                // do the recovery we do not take care of replica
-                filteredMapSync(callSuccessor().dupStore,
-                        callSuccessor().storedData,
-                        startHash,
-                        endHash);
             }
         } else {
             // find the begin hash of current node
-            Long beginHash = (callPredecessor().hashValue + 1) % CaCluster.getHashRange();
+            Long beginHash = callSuccessor() == null ? 0 : (callPredecessor().hashValue + 1) % CaCluster.getHashRange();
             // successor loads data from current node
-            Long moveNum = callSuccessor().loadData(beginHash, hashValue, this.name);
+            Long moveNum = callSuccessor() == null ? 0 : callSuccessor().loadData(callSuccessor(), beginHash, hashValue, this.name);
             // dump data from current node
-            Long removeNum = this.dumpData(beginHash, hashValue);
-            // the very last node load replica from the predecessor
-            callSuccessor().loadDup(beginHash, hashValue, this.name, CaCluster.getReplica());
-            // remove the replica data from successor
-            callSuccessor().dumpDup(beginHash, hashValue, 1L);
-            // increase the node load
-            callSuccessor().load += moveNum;
+            Long removeNum = this.dumpData(this, beginHash, hashValue);
+
+            if(this.callSuccessor() != null){
+                // the very last node load replica from the predecessor
+                callSuccessor().loadDup(callSuccessor(), beginHash, hashValue, this.name, CaCluster.getReplica());
+                // remove the replica data from successor
+                callSuccessor().dumpDup(callSuccessor(), beginHash, hashValue, 0L);
+                // increase the node load
+                callSuccessor().load += moveNum;
+            }
             // decrease the successor load
             this.load -= removeNum;
-            // update capacity of successor
-            callSuccessor().capacity += RingHashTools.hashDistance(beginHash, hashValue, CaCluster.getHashRange());
-            // tell predecessor the node is offline
-            callSuccessor().predecessor = this.predecessor;
-            // tell successor the node is offline
-            callPredecessor().successor = this.successor;
+            if(callSuccessor() != null){
+                // update capacity of successor
+                callSuccessor().capacity += RingHashTools.hashDistance(beginHash, hashValue, CaCluster.getHashRange());
+                // tell predecessor the node is offline
+                callSuccessor().predecessor = this.predecessor;
+            }
+            if(this.callPredecessor() != null){
+                // tell successor the node is offline
+                callPredecessor().successor = this.successor;
+            }
             // officially get the current node offline
             caCluster.getGlobalNodeTable().remove(this.name);
         }
@@ -189,7 +248,7 @@ public class CaNode extends Node {
         double sucLoadFactor = (double) callSuccessor().load / (double) callSuccessor().capacity;
         double curLoadFactor = (double) load / (double) capacity;
         // compare if we can do load balance with neighbour
-        if(curLoadFactor >= Math.min(preLoadFactor, sucLoadFactor)){
+        if(curLoadFactor <= Math.min(preLoadFactor, sucLoadFactor)){
             // two wins are even more crowded, then we give up.
             return;
         }
@@ -226,13 +285,13 @@ public class CaNode extends Node {
             return; // cannot do any load balancing
         }
         // predecessor loads data from current
-        Long moveNum = callPredecessor().loadData(callPredecessor().hashValue, hash, this.name);
+        Long moveNum = callPredecessor().loadData(callSuccessor(), callPredecessor().hashValue, hash, this.name);
         // dump data from current node
-        Long removeNum = this.dumpData(callPredecessor().hashValue, hashValue);
+        Long removeNum = this.dumpData(this, callPredecessor().hashValue, hashValue);
         // load replica into current node
-        this.loadDup(callPredecessor().hashValue, hash, this.successor, CaCluster.getReplica());
+        this.loadDup(this, callPredecessor().hashValue, hash, this.successor, CaCluster.getReplica());
         // remove replica from the current node
-        this.dumpDup(callPredecessor().hashValue, hash, CaCluster.getReplica());
+        this.dumpDup(this, callPredecessor().hashValue, hash, CaCluster.getReplica());
         // increase the load of predecessor
         callPredecessor().load += moveNum;
         // decrease the load of current node
@@ -251,13 +310,13 @@ public class CaNode extends Node {
             return; // cannot do any load balancing
         }
         // successor loads data from current node
-        Long moveNum = callSuccessor().loadData(hash, hashValue, this.name);
+        Long moveNum = callSuccessor().loadData(callSuccessor(), hash, hashValue, this.name);
         // dump data from current node
-        Long removeNum = this.dumpData(hash, hashValue);
+        Long removeNum = this.dumpData(this, hash, hashValue);
         // the very last node load replica from the predecessor
-        callSuccessor().loadDup(hash, hashValue, this.name, CaCluster.getReplica());
+        callSuccessor().loadDup(callSuccessor(), hash, hashValue, this.name, CaCluster.getReplica());
         // remove the replica data from successor
-        callSuccessor().dumpDup(hash, hashValue, 1L);
+        callSuccessor().dumpDup(callSuccessor(), hash, hashValue, 0L);
         // increase the node load
         callSuccessor().load += moveNum;
         // decrease the successor load
@@ -271,61 +330,75 @@ public class CaNode extends Node {
     }
 
 
-    public Long loadData(Long beginHash, Long endHash, String source){
+    public Long loadData(CaNode node, Long beginHash, Long endHash, String source){
         Long counter = 0L;
-        if(source.equals(this.successor)) {
+        if(source.equals(node.successor)) {
             // beginHash and endHash should be inclusive
-            Map<Long, DataObjPair> sucMap = callSuccessor().storedData;
-            if(endHash < beginHash){
-                // values in [beginHash, maxHash] /cup [0, endHash]
-                counter += filteredMapSync(sucMap, this.storedData, beginHash, CaCluster.getHashRange() - 1);
-                counter += filteredMapSync(sucMap, this.storedData, 0L, endHash);
-            } else {
-                counter += filteredMapSync(sucMap, this.storedData, beginHash, endHash);
+            if(node.callSuccessor() == null){
+                return 0L;
             }
-        } else if (source.equals(this.predecessor)){
-            Map<Long, DataObjPair> predMap = callPredecessor().storedData;
+            Map<Long, DataObjPair> sucMap = node.callSuccessor().storedData;
             if(endHash < beginHash){
                 // values in [beginHash, maxHash] /cup [0, endHash]
-                counter += filteredMapSync(predMap, this.storedData, beginHash, CaCluster.getHashRange() - 1);
-                counter += filteredMapSync(predMap, this.storedData, 0L, endHash);
+                counter += filteredMapSync(sucMap, node.storedData, beginHash, CaCluster.getHashRange() - 1);
+                counter += filteredMapSync(sucMap, node.storedData, 0L, endHash);
             } else {
-                counter += filteredMapSync(predMap, this.storedData, beginHash, endHash);
+                counter += filteredMapSync(sucMap, node.storedData, beginHash, endHash);
+            }
+        } else if (source.equals(node.predecessor)){
+            if(node.callPredecessor() == null){
+                return 0L;
+            }
+            Map<Long, DataObjPair> predMap = node.callPredecessor().storedData;
+            if(endHash < beginHash){
+                // values in [beginHash, maxHash] /cup [0, endHash]
+                counter += filteredMapSync(predMap, node.storedData, beginHash, CaCluster.getHashRange() - 1);
+                counter += filteredMapSync(predMap, node.storedData, 0L, endHash);
+            } else {
+                counter += filteredMapSync(predMap, node.storedData, beginHash, endHash);
             }
         }
         return counter;
     }
 
-    public void loadDup(Long beginHash, Long endHash, String source, Long dupLeft){
-        if(this.storedData.containsKey(beginHash)){
+    public void loadDup(CaNode node, Long beginHash, Long endHash, String source, Long dupLeft){
+        if(dupLeft < 0){
             // don't repeat yourself
             return;
         }
 
-        if(source.equals(this.successor)){
+        if(source.equals(node.successor)){
+            if(node.callSuccessor() == null || node.storedData.containsKey(beginHash)){
+                return;
+            }
             if(dupLeft.equals(CaCluster.getReplica())){
-                Map<Long, DataObjPair> sucMap = callSuccessor().dupStore;
+                Map<Long, DataObjPair> sucMap = node.callSuccessor().dupStore;
                 if(endHash < beginHash){
                     // values in [beginHash, maxHash] /cup [0, endHash]
-                    filteredMapSync(sucMap, this.dupStore, beginHash, CaCluster.getHashRange() - 1);
-                    filteredMapSync(sucMap, this.dupStore, 0L, endHash);
+                    node.filteredMapSync(sucMap, node.dupStore, beginHash, CaCluster.getHashRange() - 1);
+                    node.filteredMapSync(sucMap, node.dupStore, 0L, endHash);
                 } else {
-                    filteredMapSync(sucMap, this.dupStore, beginHash, endHash);
+                    node.filteredMapSync(sucMap, node.dupStore, beginHash, endHash);
                 }
             }
             // beginHash and endHash should be inclusive
-        } else if (source.equals(this.predecessor)){
-            if(dupLeft == 1){
-                Map<Long, DataObjPair> predMap = callPredecessor().dupStore;
-                if(endHash < beginHash){
-                    // values in [beginHash, maxHash] /cup [0, endHash]
-                    filteredMapSync(predMap, this.dupStore, beginHash, CaCluster.getHashRange() - 1);
-                    filteredMapSync(predMap, this.dupStore, 0L, endHash);
-                } else {
-                    filteredMapSync(predMap, this.dupStore, beginHash, endHash);
+        } else if (source.equals(node.predecessor)){
+            if(node.callPredecessor() == null){
+                return;
+            }
+            if(node.storedData.containsKey(beginHash) || dupLeft > 0){
+                if(node.callSuccessor() != null){
+                    node.loadDup(node.callSuccessor(), beginHash, endHash, node.callSuccessor().predecessor, dupLeft - 1);
                 }
             } else {
-                loadDup(beginHash, endHash, callPredecessor().predecessor, dupLeft - 1);
+                Map<Long, DataObjPair> predMap = node.callPredecessor().dupStore;
+                if(endHash < beginHash){
+                    // values in [beginHash, maxHash] /cup [0, endHash]
+                    node.filteredMapSync(predMap, node.dupStore, beginHash, CaCluster.getHashRange() - 1);
+                    node.filteredMapSync(predMap, node.dupStore, 0L, endHash);
+                } else {
+                    node.filteredMapSync(predMap, node.dupStore, beginHash, endHash);
+                }
             }
         }
     }
@@ -337,25 +410,43 @@ public class CaNode extends Node {
         Long counter = 0L;
         for(long i : oriMap.keySet()){
             // beginHash and endHash is inclusive
-            if(i >= beginHash && i <= endHash){
+            if(i >= beginHash && i <= endHash && !newMap.containsKey(i)){
                 counter++;
                 DataObjPair obj = oriMap.get(i);
+
                 newMap.put(obj.getKey(), obj);
             }
         }
         return counter;
     }
 
-    public Long dumpData(Long beginHash, Long endHash){
-        return filteredMapRemove(this.storedData, beginHash, endHash);
+    public Long dumpData(CaNode node, Long beginHash, Long endHash){
+        Long counter = 0L;
+        if(endHash < beginHash){
+            // values in [beginHash, maxHash] /cup [0, endHash]
+            counter += node.filteredMapRemove(node.storedData, beginHash, CaCluster.getHashRange() - 1);
+            counter += node.filteredMapRemove(node.storedData, 0L, endHash);
+        } else {
+            counter += node.filteredMapRemove(node.storedData, beginHash, endHash);
+        }
+        return counter;
     }
 
-    public void dumpDup(Long beginHash, Long endHash, Long dupLeft){
-        if(dupLeft == 1){
+    public void dumpDup(CaNode node, Long beginHash, Long endHash, Long dupLeft){
+        if(dupLeft == 0){
             // from successor
-            callSuccessor().filteredMapRemove(callSuccessor().dupStore, beginHash, endHash);
+            if(endHash < beginHash){
+                // values in [beginHash, maxHash] /cup [0, endHash]
+                node.filteredMapRemove(node.dupStore, beginHash, CaCluster.getHashRange() - 1);
+                node.filteredMapRemove(node.dupStore, 0L, endHash);
+            } else {
+                node.filteredMapRemove(node.dupStore, beginHash, endHash);
+            }
         } else {
-            callSuccessor().dumpDup(beginHash, endHash, dupLeft - 1);
+            if(node.callSuccessor() == null){
+                return;
+            }
+            node.callSuccessor().dumpDup(node.callSuccessor(), beginHash, endHash, dupLeft - 1);
         }
     }
 
@@ -363,10 +454,12 @@ public class CaNode extends Node {
                              Long beginHash, Long endHash) {
         // Same as filteredMap we may use logger to tract the data movement.
         Long counter = 0L;
-        for(long i : oriMap.keySet()){
-            if(i >= beginHash && i <= endHash){
+        Iterator<Map.Entry<Long, DataObjPair>> itor = oriMap.entrySet().iterator();
+        while(itor.hasNext()){
+            Map.Entry<Long, DataObjPair> entry = itor.next();
+            if(entry.getKey() >= beginHash && entry.getKey() <= endHash){
                 counter++;
-                oriMap.remove(i);
+                itor.remove();
             }
         }
         return counter;
@@ -381,12 +474,12 @@ public class CaNode extends Node {
             if(this.storedData.containsKey(key)){
                 return 1; // key already exist
             }
-            this.storedData.put(key, new DataObjPair(key, value));
+            this.storedData.put(key, new DataObjPair(key, value, 0L));
             this.load++;
             // also do duplication
             return insertDup(key, value, CaCluster.getReplica());
         } else {
-            System.out.println(String.format("Sent to next node {}", callSuccessor().name));
+            System.out.println(String.format("Sent to next node %s", callSuccessor().name));
             return callSuccessor().insertData(key, value);
         }
     }
@@ -411,7 +504,7 @@ public class CaNode extends Node {
                     // go to the self node or have established data
                     return 0;
                 }
-                node.dupStore.put(key, new DataObjPair(key, value));
+                node.dupStore.put(key, new DataObjPair(key, value, CaCluster.getReplica() - dupLeft + 1));
                 return callSuccessor().insertDup(key, value, dupLeft - 1);
             } catch (Exception e){
                 System.out.println(Arrays.toString(e.getStackTrace()));
@@ -458,7 +551,7 @@ public class CaNode extends Node {
         if(RingHashTools.inCurrent(caCluster.getNodeHash(this.predecessor), this.hashValue, key)){
             // simply overwrite the previous data. Here we mimic Redis
             if(this.storedData.get(key) != null){
-                this.storedData.put(key, new DataObjPair(key, value));
+                this.storedData.put(key, new DataObjPair(key, value, 0L));
                 // update dups
                 return updateDup(key, value, CaCluster.getReplica());
             } else {
@@ -495,7 +588,7 @@ public class CaNode extends Node {
                     return 0;
                 }
                 if(node.dupStore.containsKey(key)){
-                    node.dupStore.put(key, new DataObjPair(key, value));
+                    node.dupStore.put(key, new DataObjPair(key, value,  node.dupStore.get(key).getReplicaI()));
                     dupLeft -= 1;
                 }
                 if(callSuccessor() != null){

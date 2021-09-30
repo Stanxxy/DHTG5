@@ -1,5 +1,7 @@
-package com.company.ceph;
+package com.company.Ceph;
 
+import com.company.Ceph.CeCluster;
+import com.company.Ceph.CeNode;
 import com.company.Commons.DataObjPair;
 
 import java.nio.ByteBuffer;

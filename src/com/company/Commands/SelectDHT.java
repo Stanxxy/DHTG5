@@ -1,12 +1,11 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.BasicDHT;
 import com.company.Cassandra.CaCluster;
 import com.company.Cassandra.CaDHT;
 import com.company.Main;
 import com.company.NodeManager;
-import com.company.ceph.CeCluster;
-import com.sun.source.tree.Tree;
+import com.company.Ceph.CeCluster;
 
 import java.util.TreeMap;
 
@@ -27,7 +26,7 @@ public class SelectDHT extends Command {
                 CaDHT dhtObj = new CaDHT(CaCluster.getCluster());
                 main.foregroundDHT = dhtObj;
                 main.foregroundManager = dhtObj;
-                System.out.println("Selected Ceph");
+                System.out.println("Selected Cassandra");
             }
             else if(!main.foregroundDHT.getName().equals("CaDHT")) {
                 swap();

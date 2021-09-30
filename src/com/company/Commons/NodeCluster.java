@@ -1,7 +1,7 @@
 package com.company.Commons;
 
 import com.company.Cassandra.CaCluster;
-import com.company.ceph.CeNode;
+import com.company.Ceph.CeNode;
 
 import java.nio.channels.NotYetBoundException;
 import java.util.ArrayList;
@@ -41,11 +41,6 @@ public class NodeCluster<NType> {
 
     public static void setReplica(Long numReplica) {
         NodeCluster.replicas = numReplica;
-    }
-
-    public static void setReplica(Long numReplica, Long minCopy) {
-        NodeCluster.replicas = numReplica;
-        NodeCluster.minCopy = numReplica;
     }
 
     public static void setHashRange(Long range) {

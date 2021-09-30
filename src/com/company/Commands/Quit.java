@@ -1,4 +1,4 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
@@ -10,5 +10,6 @@ public class Quit extends Command {
     @Override
     protected void runOnLine(String[] args) {
         main.stop();
+
     }
 }

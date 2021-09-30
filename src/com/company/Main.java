@@ -1,9 +1,10 @@
 package com.company;
 
-import com.company.ceph.CeCluster;
-import com.company.ceph.CeNode;
-import com.company.ceph.CephHashTools;
-import com.company.commands.*;
+import com.company.Commands.Command;
+import com.company.Ceph.CeCluster;
+import com.company.Ceph.CeNode;
+import com.company.Ceph.CephHashTools;
+import com.company.Commands.*;
 
 import java.util.Scanner;
 
@@ -29,12 +30,20 @@ public class Main {
         commands = new Command[]{
                 helpCommand,
                 new SelectDHT(this),
+                new Insert(this),
+                new Retrieve(this),
+                new Update(this),
+                new Delete(this),
+                new AddNode(this),
+                new RemoveNode(this),
+                new UnplugNode(this),
+                new BalanceLoad(this),
                 new SetClusterMeta(this),
                 new ListAllNodes(this),
                 new ListNodeData(this),
-                new Quit(this),
-                new Insert(this),
-                new Retrieve(this),
+                new ListNodeMeta(this),
+                new Quit(this)
+
         };
         helpCommand.setCommands(commands);
         terminal = new Scanner(System.in);

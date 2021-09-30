@@ -1,10 +1,10 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
 public class BalanceLoad extends Command {
     public BalanceLoad(Main main) {
-        super(main, "b", "do load balancing of certain node", 1);
+        super(main, "bn", "do load balancing of certain node", 1);
     }
 
     @Override

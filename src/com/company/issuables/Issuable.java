@@ -1,6 +1,6 @@
 package com.company.issuables;
 
-import com.company.ceph.CeNode;
+import com.company.Ceph.CeNode;
 
 import java.util.concurrent.Callable;
 

@@ -2,35 +2,30 @@ package com.company.Cassandra;
 
 import com.company.BasicDHT;
 import com.company.Commons.DataObjPair;
-import com.company.Commons.Node;
 import com.company.Commons.NodeFactory;
 import com.company.NodeManager;
 import com.company.Utils.RingHashTools;
-
-import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+
 
 // CaDHT is the client of Cassandra DHT
 public class CaDHT implements BasicDHT, NodeManager {
-    List<String> nodeName;
+
     Random r = new Random();
     CaCluster caCluster;
     String type;
 
     public CaDHT(CaCluster cluster) {
         this.caCluster = cluster;
-        this.nodeName = cluster.getNameList();
         this.type = "Ca";
     }
 
     private String randomNodeSelect(){
         // randomly return the node name
-        int size = nodeName.size();
-        return nodeName.get(r.nextInt(size - 1));
+        int size = this.caCluster.getNameList().size();
+        return this.caCluster.getNameList().get(r.nextInt(size - 1));
     }
 
     @Override
@@ -53,8 +48,7 @@ public class CaDHT implements BasicDHT, NodeManager {
     public DataObjPair select(Long key) {
         String nodeName = randomNodeSelect();
         try{
-            caCluster.getGlobalNodeTable().get(nodeName).selectData(key);
-            return null;
+            return caCluster.getGlobalNodeTable().get(nodeName).selectData(key);
         } catch (Exception e){
             return null;
         }
@@ -87,24 +81,38 @@ public class CaDHT implements BasicDHT, NodeManager {
         StringBuilder sb;
         sb = new StringBuilder();
         sb.append("=========================\n");
-        sb.append("Node: " + nodeName + ":\n");
+        sb.append("Node: " + nodeName + "\n");
         List<List<DataObjPair>> dataView = caCluster.getGlobalNodeTable().get(nodeName).viewData();
         sb.append("stored data: \n");
         for(DataObjPair data : dataView.get(0)){
             sb.append(data + "\n");
         }
         sb.append("replica: \n");
-        for(DataObjPair data : dataView.get(0)){
+        for(DataObjPair data : dataView.get(1)){
             sb.append(data + "\n");
         }
         return sb.toString();
+    }
 
+    @Override
+    public String listNodeMeta(String nodeName) {
+        StringBuilder sb;
+        sb = new StringBuilder();
+        sb.append("=========================\n");
+        sb.append("Node: " + nodeName + "\n");
+        Long hash = caCluster.getGlobalNodeTable().get(nodeName).getHashValue();
+        sb.append(String.format("hash value: %d\n", hash));
+        Long capacity = caCluster.getGlobalNodeTable().get(nodeName).getCapacity();
+        sb.append(String.format("capacity: %d\n", capacity));
+        Long load = caCluster.getGlobalNodeTable().get(nodeName).getLoad();
+        sb.append(String.format("current load: %d\n", load));
+        return sb.toString();
     }
 
     @Override
     public String listAllNodes() {
         StringBuilder sb = new StringBuilder();
-        this.nodeName.forEach(e -> sb.append(e).append("\n"));
+        this.caCluster.getNameList().forEach(e -> sb.append(e).append("\n"));
         sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
@@ -117,7 +125,7 @@ public class CaDHT implements BasicDHT, NodeManager {
 
     @Override
     public void addNode(String name, Long hashValue) {
-        NodeFactory.generateNode(name, this.type, hashValue);
+        NodeFactory.generateNode(this.type, name, hashValue);
     }
 
     @Override

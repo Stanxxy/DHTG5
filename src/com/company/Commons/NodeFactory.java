@@ -2,7 +2,7 @@ package com.company.Commons;
 
 import com.company.Cassandra.CaCluster;
 import com.company.Cassandra.CaNode;
-import com.company.ceph.CeNode;
+import com.company.Ceph.CeNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class NodeFactory {
             long interval = (hashRange / (long) nodeNumber);
             long tmpHash = 0L;
             long counter = 0L;
-            while(tmpHash < hashRange){
+            while(counter < nodeNumber){
                 // tmpHash is the endpoints, and it is inclusive;
                 // counter is the sequence number for node.
                 // node hash should not be the same with its sequence number. As the node may move.

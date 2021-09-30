@@ -1,12 +1,12 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Cassandra.CaNode;
 import com.company.Commons.Node;
 import com.company.Commons.NodeCluster;
 import com.company.Commons.NodeFactory;
 import com.company.Main;
-import com.company.ceph.CeCluster;
-import com.company.ceph.CeNode;
+import com.company.Ceph.CeCluster;
+import com.company.Ceph.CeNode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,9 +31,10 @@ public class SetClusterMeta extends Command{
 
         NodeCluster.setHashRange(hashRange);
         if(type.equals("CaDHT")) {
+            NodeCluster.setReplica(replica);
             if(args.length == 5) {
                 Long min_copy = Long.parseLong(args[4]);
-                NodeCluster.setReplica(replica, min_copy);
+                NodeCluster.setMinCopy(min_copy);
             }
             NodeFactory.initializeNodes("Ca", nodeNum, null);
         }

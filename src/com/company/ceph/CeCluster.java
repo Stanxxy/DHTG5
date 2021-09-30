@@ -1,4 +1,4 @@
-package com.company.ceph;
+package com.company.Ceph;
 
 import com.company.BasicDHT;
 import com.company.Commons.DataObjPair;
@@ -85,6 +85,11 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
             sb.append(globalNodeTable.get(name).getMetaData());
             return sb.toString();
         }
+        return null;
+    }
+
+    @Override
+    public String listNodeMeta(String name) {
         return null;
     }
 

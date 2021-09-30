@@ -1,5 +1,6 @@
-package com.company.ceph;
+package com.company.Ceph;
 
+import com.company.Ceph.CeCluster;
 import com.company.Commons.DataObjPair;
 import com.company.Commons.Node;
 import com.company.Commons.NodeCluster;

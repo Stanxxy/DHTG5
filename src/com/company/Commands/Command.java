@@ -1,4 +1,4 @@
-package com.company.commands;
+package com.company.Commands;
 
 import com.company.Main;
 
