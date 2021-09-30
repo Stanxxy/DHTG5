@@ -110,6 +110,11 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
+    public String debug() {
+        return null;
+    }
+
+    @Override
     public String listAllNodes() {
         StringBuilder sb = new StringBuilder();
         this.caCluster.getNameList().forEach(e -> sb.append(e).append("\n"));

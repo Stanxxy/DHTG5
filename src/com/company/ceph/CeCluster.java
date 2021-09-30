@@ -29,19 +29,19 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     @Override
     public boolean insert(Long key, String value) {
         DataObjPair data = new DataObjPair(key, value);
-        try {
-            CeNode location = CephHashTools.computeDataLocation(this, data);
-            return location.insert(data);
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            e.printStackTrace();
-            return false;
+        boolean success = CephHashTools.computeDataLocation(this, data).insert(data);
+
+        for(int i = 1; i < NodeCluster.getReplica(); i ++) {
+            DataObjPair replicaI = data.replicate(Long.valueOf(i));
+            CephHashTools.computeDataLocation(this, replicaI).insert(replicaI);
         }
+        return success;
     }
 
     @Override
     public DataObjPair select(Long key) {
+        DataObjPair search = new DataObjPair(key);
         for(int i = 0; i < NodeCluster.getReplica(); i ++) {
-            DataObjPair search = new DataObjPair(key);
             search.setReplicaI((long) i);
             CeNode location = CephHashTools.computeDataLocation(this, search);
             DataObjPair result = location.select(search);
@@ -55,12 +55,26 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
 
     @Override
     public boolean update(Long key, String value) {
-        return false;
+        DataObjPair search = new DataObjPair(key);
+        boolean success = false;
+        for(int i = 0; i < NodeCluster.getReplica(); i ++) {
+            search.setReplicaI((long) i);
+            CeNode location = CephHashTools.computeDataLocation(this, search);
+            success = location.update(key, value) || success;
+        }
+        return success;
     }
 
     @Override
     public boolean delete(Long key) {
-        return false;
+        boolean success = false;
+        DataObjPair search = new DataObjPair(key);
+        for(int i = 0; i < NodeCluster.getReplica(); i ++) {
+            search.setReplicaI((long) i);
+            CeNode location = CephHashTools.computeDataLocation(this, search);
+            success = location.delete(key) || success;
+        }
+        return success;
     }
 
     @Override
@@ -82,7 +96,7 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     public String listNodeData(String name) {
         if(globalNodeTable.containsKey(name)) {
             StringBuilder sb = new StringBuilder();
-            sb.append(globalNodeTable.get(name).getMetaData());
+            sb.append(globalNodeTable.get(name).getData());
             return sb.toString();
         }
         return null;
@@ -90,17 +104,32 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
 
     @Override
     public String listNodeMeta(String name) {
+        if(globalNodeTable.containsKey(name)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(globalNodeTable.get(name).getMetaData());
+            return sb.toString();
+        }
         return null;
+    }
+
+    public String debug() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Ceph Debug...\n");
+        for(CeNode node : getGlobalNodeTable().values()) {
+            sb.append(node.getData());
+        }
+        sb.append("...end Ceph debug\n");
+        return sb.toString();
     }
 
     @Override
     public void addNode(String name) {
-
+        // do not use
     }
 
     @Override
     public void addNode(String name, Long hashValue) {
-
+        // do not use
     }
 
     @Override

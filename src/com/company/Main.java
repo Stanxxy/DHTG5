@@ -30,6 +30,7 @@ public class Main {
         commands = new Command[]{
                 helpCommand,
                 new SelectDHT(this),
+                new SetClusterMeta(this),
                 new Insert(this),
                 new Retrieve(this),
                 new Update(this),
@@ -38,10 +39,10 @@ public class Main {
                 new RemoveNode(this),
                 new UnplugNode(this),
                 new BalanceLoad(this),
-                new SetClusterMeta(this),
                 new ListAllNodes(this),
                 new ListNodeData(this),
                 new ListNodeMeta(this),
+                new Debug(this),
                 new Quit(this)
 
         };
