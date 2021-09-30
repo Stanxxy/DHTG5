@@ -2,6 +2,7 @@ package com.company.Commons;
 
 import com.company.Cassandra.CaCluster;
 import com.company.Cassandra.CaNode;
+import com.company.ceph.CeNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.Map;
 public class NodeFactory {
 
     // initialize needed nodes. For cassandra, simply put type "Ca"
-    public static List<Node> initializeNodes(String type, Integer nodeNumber){
+    public static List<Node> initializeNodes(String type, Integer nodeNumber, Double[] weights){
         List<Node> nodeList = new ArrayList<>(nodeNumber);
         if(type.equals("Ca")){ // Ca for Cassandra
             Long hashRange = CaCluster.getHashRange();
@@ -25,11 +26,13 @@ public class NodeFactory {
                 tmpHash += interval;
                 counter++;
             }
-            return nodeList;
         } else {
-
-            return null;
+            for(int i = 0; i < nodeNumber; i ++) {
+                double weight = weights[i];
+                nodeList.add(i, new CeNode((long) i, weight));
+            }
         }
+        return nodeList;
     }
 
     public static Node generateNode(String type, String name, Long hash){
@@ -49,9 +52,7 @@ public class NodeFactory {
             CaNode node = new CaNode(name, hash, seeds);
             cluster.addNode(name, node);
             return node;
-        } else {
-            // for ceph
-            return null;
         }
+        return null;
     }
 }

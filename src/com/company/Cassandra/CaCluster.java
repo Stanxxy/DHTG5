@@ -5,38 +5,7 @@ import com.company.Commons.NodeCluster;
 import java.util.HashMap;
 
 public class CaCluster extends NodeCluster<CaNode> {
-
     private static CaCluster cluster;
-
-    private static Long hashRange;
-
-    private static Long replica;
-
-    private static Long minCopy = 0L;
-
-    public static void setHashRange(Long hashRange){
-        CaCluster.hashRange = hashRange;
-    }
-
-    public static void setReplica(Long replica){
-        CaCluster.replica = replica;
-    }
-
-    public static void setMinCopy(Long minCopy){
-        CaCluster.minCopy = Math.min(minCopy, replica);
-    }
-
-    public static Long getHashRange(){
-        return CaCluster.hashRange;
-    }
-
-    public static Long getReplica(){
-        return CaCluster.replica;
-    }
-
-    public static Long getMinCopy(){
-        return minCopy;
-    }
 
     public Long getNodeHash(String name){
         return getGlobalNodeTable().get(name).getHashValue();

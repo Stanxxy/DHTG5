@@ -25,7 +25,7 @@ public class CephHashTools {
         System.out.println("Computing the CEPH data location for " + data);
         while(!nodes.isEmpty()) {
             CeNode location = nodes.peek();
-            Long m = cluster.getM();
+            Long m = CeCluster.getHashRange();
             Long x = data.getKey();
             Long r = data.getReplicaI();
             Long cid = location.getIndex();

@@ -16,7 +16,6 @@ import java.util.concurrent.TimeoutException;
 
 // CaDHT is the client of Cassandra DHT
 public class CaDHT implements BasicDHT, NodeManager {
-
     List<String> nodeName;
     Random r = new Random();
     CaCluster caCluster;
@@ -122,7 +121,7 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
-    public void shutDownNode(String name) {
+    public void removeNode(String name) {
         try{
             caCluster.getGlobalNodeTable().get(name).shutdownNode(false);
         } catch (Exception e){
@@ -131,7 +130,7 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
-    public void breakDownNode(String name) {
+    public void unplugNode(String name) {
         try{
             caCluster.getGlobalNodeTable().get(name).shutdownNode(true);
         } catch (Exception e){

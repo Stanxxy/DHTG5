@@ -10,15 +10,9 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class CeCluster implements BasicDHT {
-    Map<Integer, CeNode> nodes;
-    Long m; // 2^m hash space
-    Long k; // number of replicas
-
-    public CeCluster(TreeMap<Integer, CeNode> nodes, Long m, Long k) {
-        this.nodes = nodes;
-        this.m = m;
-        this.k = k;
+public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeManager {
+    public CeCluster(TreeMap<String, CeNode> nodes) {
+        super(nodes);
 
         for(CeNode node : nodes.values()) {
             node.setCluster(this);
@@ -31,24 +25,12 @@ public class CeCluster implements BasicDHT {
         }
     }
 
-    public Long getM() {
-        return m;
-    }
-
-    public Long getK() {
-        return k;
-    }
-
-    public Map<Integer, CeNode> getGlobalNodeTable() {
-        return nodes;
-    }
-
     @Override
     public boolean insert(Long key, String value) {
         DataObjPair data = new DataObjPair(key, value);
         CephHashTools.computeDataLocation(this, data).insert(data);
 
-        for(int i = 1; i < getK(); i ++) {
+        for(int i = 1; i < replicas; i ++) {
             DataObjPair replicaI = data.replicate(Long.valueOf(i));
             CephHashTools.computeDataLocation(this, replicaI).insert(replicaI);
         }
@@ -72,6 +54,51 @@ public class CeCluster implements BasicDHT {
 
     @Override
     public String getName() {
+        return CeCluster.class.getSimpleName();
+    }
+
+    @Override
+    public String listAllNodes() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Ceph Nodes:\n");
+        for(CeNode node : globalNodeTable.values()) {
+            sb.append("\t" + node.getName() + "\n");
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String listNodeData(String name) {
+        if(globalNodeTable.containsKey(name)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(globalNodeTable.get(name).getMetaData());
+            return sb.toString();
+        }
         return null;
+    }
+
+    @Override
+    public void addNode(String name) {
+
+    }
+
+    @Override
+    public void addNode(String name, Long hashValue) {
+
+    }
+
+    @Override
+    public void removeNode(String name) {
+
+    }
+
+    @Override
+    public void unplugNode(String name) {
+
+    }
+
+    @Override
+    public void loadBalancing(String name) {
+
     }
 }

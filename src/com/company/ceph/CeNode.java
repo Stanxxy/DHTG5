@@ -83,15 +83,10 @@ public class CeNode extends Node {
         return ft.get(10L, TimeUnit.SECONDS);
     }
 
-    public String toString() {
+    public String getMetaData() {
         StringBuilder sb = new StringBuilder();
-        sb.append(name + "\n");
+        sb.append(getName() + "\n");
         sb.append("\tWeight: " + weight + "; Load: " + getLoad() + "\n");
-        sb.append("\tData:\n");
-
-        for(DataObjPair data : storedData.values()) {
-            sb.append("\t\t" + data + "\n");
-        }
         return sb.toString();
     }
 }

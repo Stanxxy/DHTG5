@@ -17,6 +17,8 @@ public class Main {
     // We need to maintain a DHT Object to simulate service
     public BasicDHT foregroundDHT;
     public BasicDHT backgroundDHT;
+    public NodeManager foregroundManager;
+    public NodeManager backgroundManager;
 
     private Command[] commands;
     private Scanner terminal;
@@ -27,10 +29,9 @@ public class Main {
         commands = new Command[]{
                 helpCommand,
                 new SelectDHT(this),
-                new Insert(this),
-                new Retrieve(this),
-                new Update(this),
-                new Delete(this),
+                new SetClusterMeta(this),
+                new ListAllNodes(this),
+                new ListNodeData(this),
                 new Quit(this),
         };
         helpCommand.setCommands(commands);
@@ -59,38 +60,4 @@ public class Main {
     public Scanner getScanner() {
         return terminal;
     }
-
-    /*
-    private void printMenu() {
-        // in this function, we simply print the menu
-        System.out.println("ln -- list existing node list");
-        System.out.println("ld -- list the metadata of all stored files");
-        System.out.println("an -- add node");
-        System.out.println("rn -- remove nodes");
-        System.out.println("lb -- ask the system to do load balance");
-    }
-
-     */
-
-    /*
-    private void listNode(){
-
-    }
-
-    private void listData(){
-
-    }
-
-    private void addNode(){
-
-    }
-
-    private void removeNode(){
-
-    }
-
-    private void loadBalance(){
-
-    }
-    */
 }
