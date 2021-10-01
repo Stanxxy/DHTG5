@@ -16,7 +16,6 @@ import java.util.concurrent.TimeoutException;
 public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeManager {
     public CeCluster(TreeMap<String, CeNode> nodes) {
         super(nodes);
-
         setGlobalNodeTable(nodes);
 
         try {
@@ -124,6 +123,29 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
         return sb.toString();
     }
 
+
+    @Override
+    public void addNode(Double weight) {
+        int nodeIndex =  this.globalNodeTable.size();
+        CeNode toAdd = new CeNode(Long.valueOf(nodeIndex), weight);
+        globalNodeTable.put(toAdd.getName(), toAdd);
+
+        //re-shuffle nodes
+        TreeMap<String, CeNode> newTopology = new TreeMap<>(globalNodeTable);
+
+        ArrayList<MovingDataObj> toMove = new ArrayList<>();
+        for (CeNode node : globalNodeTable.values()) {
+            toMove.addAll(node.shuffle(newTopology.values()));
+        }
+
+        for (MovingDataObj moving : toMove) {
+            moving.getAddress().insert(moving.getData());
+        }
+        return;
+    }
+
+
+
     @Override
     public void addNode(String name) {
         // do not use
@@ -169,6 +191,33 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     }
 
     @Override
+    public void loadBalancing(String name, Double weight) {
+        //check if desired node exists
+        if(globalNodeTable.containsKey(name)) {
+
+            //change the weight of a node
+            globalNodeTable.get(name).setWeight(weight);
+
+            //reshuffle nodes
+            TreeMap<String, CeNode> newTopology = new TreeMap<>(globalNodeTable);
+
+            ArrayList<MovingDataObj> toMove = new ArrayList<>();
+            for (CeNode node : globalNodeTable.values()) {
+                toMove.addAll(node.shuffle(newTopology.values()));
+            }
+
+            for (MovingDataObj moving : toMove) {
+                moving.getAddress().insert(moving.getData());
+            }
+        }
+        else {
+            System.out.println("Requested node does not exist");
+        }
+    }
+
+
+
+    @Override
     public void loadBalancing(String name) {
 
     }
@@ -181,4 +230,5 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
             node.setCluster(this);
         }
     }
+
 }

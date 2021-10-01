@@ -134,6 +134,11 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
+    public void addNode(Double weight) {
+        //empty, only used for ceph
+    }
+
+    @Override
     public boolean removeNode(String name) {
         try{
             caCluster.getGlobalNodeTable().get(name).shutdownNode(false);
@@ -160,5 +165,10 @@ public class CaDHT implements BasicDHT, NodeManager {
         } catch (Exception e){
             System.out.println("shutdown Fail.\n" + Arrays.toString(e.getStackTrace()));
         }
+    }
+
+    @Override
+    public void loadBalancing(String name, Double weight) {
+        //empty, only used for ceph
     }
 }

@@ -10,12 +10,20 @@ public class AddNode extends Command{
 
     @Override
     protected void runOnLine(String[] args) {
-        String nodeName = args[1];
-        if(args.length == 3){
-            Long hashValue = Long.parseLong(args[2]);
-            main.foregroundManager.addNode(nodeName, hashValue);
-        } else {
-            main.foregroundManager.addNode(nodeName);
+        String type = main.foregroundDHT.getName();
+
+        if(type.equals("CaDHT")) {
+            String nodeName = args[1];
+            if (args.length == 3) {
+                Long hashValue = Long.parseLong(args[2]);
+                main.foregroundManager.addNode(nodeName, hashValue);
+            } else {
+                main.foregroundManager.addNode(nodeName);
+            }
+        }
+        else if(type.equals("CeCluster")) {
+            Double weight = Double.parseDouble(args[1]);
+            main.foregroundManager.addNode(weight);
         }
     }
 }
