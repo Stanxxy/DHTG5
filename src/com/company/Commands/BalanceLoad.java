@@ -9,8 +9,16 @@ public class BalanceLoad extends Command {
 
     @Override
     protected void runOnLine(String[] args) {
-        String nodeName = args[1];
 
-        main.foregroundManager.loadBalancing(nodeName);
+        String type = main.foregroundDHT.getName();
+        if(type.equals("CaDHT")) {
+            String nodeName = args[1];
+            main.foregroundManager.loadBalancing(nodeName);
+        }
+        else if(type.equals("CeCluster")) {
+            String nodeName = args[1];
+            Double newWeight = Double.parseDouble(args[2]);
+            main.foregroundManager.loadBalancing(nodeName, newWeight);
+        }
     }
 }

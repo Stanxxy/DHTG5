@@ -7,7 +7,9 @@ public interface NodeManager {
     String debug();
     void addNode(String name);
     void addNode(String name, Long hashValue);
+    void addNode(Double weight); //for ceph
     boolean removeNode(String name);
     void unplugNode(String name);
     void loadBalancing(String name);
+    void loadBalancing(String name, Double weight);
 }

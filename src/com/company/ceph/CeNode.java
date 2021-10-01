@@ -20,7 +20,13 @@ public class CeNode extends Node {
     public CeNode(Long index, Double weight) {
         this.index = index;
         this.weight = weight;
-        this.name = "Ce_Node-" + index;
+
+        this.name = "Ce_Node-";
+
+        for (int i = 0; i < 2 - String.valueOf(index).length(); i++) {
+            this.name = this.name + "0";
+        }
+        this.name = this.name + index;
 
         storedData = new HashMap<>();
     }
