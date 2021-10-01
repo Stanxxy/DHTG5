@@ -31,7 +31,7 @@ public class SetClusterMeta extends Command{
 
         NodeCluster.setHashRange(hashRange);
         if(type.equals("CaDHT")) {
-            NodeCluster.setReplica(replica);
+            NodeCluster.setReplica(replica - 1); // make the origin data excluded
             if(args.length == 5) {
                 Long min_copy = Long.parseLong(args[4]);
                 NodeCluster.setMinCopy(min_copy);
