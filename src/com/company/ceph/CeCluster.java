@@ -140,13 +140,6 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
         return;
     }
 
-
-
-    @Override
-    public void addNode(String name) {
-        // do not use
-    }
-
     @Override
     public void addNode(String name, Long hashValue) {
         // do not use

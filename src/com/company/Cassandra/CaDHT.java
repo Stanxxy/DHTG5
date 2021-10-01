@@ -126,12 +126,6 @@ public class CaDHT implements BasicDHT, NodeManager {
     }
 
     @Override
-    public void addNode(String name) {
-        Long hashValue = RingHashTools.hashNode(name, CaCluster.getHashRange());
-        addNode(name, hashValue);
-    }
-
-    @Override
     public void addNode(String name, Long hashValue) {
         NodeFactory.generateNode(this.type, name, hashValue);
     }

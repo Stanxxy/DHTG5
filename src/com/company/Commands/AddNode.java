@@ -15,12 +15,8 @@ public class AddNode extends Command{
 
         if(type.equals("CaDHT")) {
             String nodeName = args[1];
-            if (args.length == 3) {
-                Long hashValue = Long.parseLong(args[2]);
-                main.foregroundManager.addNode(nodeName, hashValue);
-            } else {
-                main.foregroundManager.addNode(nodeName);
-            }
+            Long hashValue = Long.parseLong(args[2]);
+            main.foregroundManager.addNode(nodeName, hashValue);
         }
         else if(type.equals("CeCluster")) {
             Double weight = Double.parseDouble(args[1]);
