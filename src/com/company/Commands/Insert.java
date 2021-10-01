@@ -22,6 +22,12 @@ public class Insert extends Command {
         }
         String value = valueBuilder.toString();
 
-        main.foregroundDHT.insert(key, value);
+        System.out.println("Inserting " + key + "...");
+        if(main.foregroundDHT.insert(key, value)) {
+            System.out.println("Inserted!");
+        }
+        else {
+            System.out.println("Failed to insert...");
+        }
     }
 }

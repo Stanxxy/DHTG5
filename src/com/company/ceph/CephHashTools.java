@@ -14,8 +14,7 @@ public class CephHashTools {
         md = MessageDigest.getInstance("SHA256");
     }
 
-    public static CeNode computeDataLocation(CeCluster cluster, DataObjPair data) {
-        Collection<CeNode> nodeCollection = cluster.getGlobalNodeTable().values();
+    public static CeNode computeDataLocation(Collection<CeNode> nodeCollection, DataObjPair data) {
         Stack<CeNode> nodes = new Stack<>();
         for(CeNode node : nodeCollection) {
             nodes.push(node);

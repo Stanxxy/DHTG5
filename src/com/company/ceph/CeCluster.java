@@ -4,8 +4,10 @@ import com.company.BasicDHT;
 import com.company.Commons.DataObjPair;
 import com.company.Commons.NodeCluster;
 import com.company.NodeManager;
+import com.sun.source.tree.Tree;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
@@ -27,21 +29,21 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
     @Override
     public boolean insert(Long key, String value) {
         DataObjPair data = new DataObjPair(key, value);
-        try {
-            CeNode location = CephHashTools.computeDataLocation(this, data);
-            return location.insert(data);
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            e.printStackTrace();
-            return false;
+        boolean success = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), data).insert(data);
+
+        for(int i = 1; i < NodeCluster.getReplica(); i ++) {
+            DataObjPair replicaI = data.replicate(Long.valueOf(i));
+            CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), replicaI).insert(replicaI);
         }
+        return success;
     }
 
     @Override
     public DataObjPair select(Long key) {
+        DataObjPair search = new DataObjPair(key);
         for(int i = 0; i < NodeCluster.getReplica(); i ++) {
-            DataObjPair search = new DataObjPair(key);
             search.setReplicaI((long) i);
-            CeNode location = CephHashTools.computeDataLocation(this, search);
+            CeNode location = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), search);
             DataObjPair result = location.select(search);
 
             if(result != null) {
@@ -53,12 +55,26 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
 
     @Override
     public boolean update(Long key, String value) {
-        return false;
+        DataObjPair search = new DataObjPair(key);
+        boolean success = false;
+        for(int i = 0; i < NodeCluster.getReplica(); i ++) {
+            search.setReplicaI((long) i);
+            CeNode location = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), search);
+            success = location.update(key, value) || success;
+        }
+        return success;
     }
 
     @Override
     public boolean delete(Long key) {
-        return false;
+        boolean success = false;
+        DataObjPair search = new DataObjPair(key);
+        for(int i = 0; i < NodeCluster.getReplica(); i ++) {
+            search.setReplicaI((long) i);
+            CeNode location = CephHashTools.computeDataLocation(this.getGlobalNodeTable().values(), search);
+            success = location.delete(key) || success;
+        }
+        return success;
     }
 
     @Override
@@ -82,7 +98,7 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
         // here I simply want to list all data
         if(globalNodeTable.containsKey(name)) {
             StringBuilder sb = new StringBuilder();
-            sb.append(globalNodeTable.get(name).getMetaData());
+            sb.append(globalNodeTable.get(name).getData());
             return sb.toString();
         }
         return null;
@@ -90,27 +106,66 @@ public class CeCluster extends NodeCluster<CeNode> implements BasicDHT, NodeMana
 
     @Override
     public String listNodeMeta(String name) {
+        if(globalNodeTable.containsKey(name)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(globalNodeTable.get(name).getMetaData());
+            return sb.toString();
+        }
         return null;
+    }
+
+    public String debug() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Ceph Debug...\n");
+        for(CeNode node : getGlobalNodeTable().values()) {
+            sb.append(node.getData());
+        }
+        sb.append("...end Ceph debug\n");
+        return sb.toString();
     }
 
     @Override
     public void addNode(String name) {
-
+        // do not use
     }
 
     @Override
     public void addNode(String name, Long hashValue) {
-
+        // do not use
     }
 
     @Override
-    public void removeNode(String name) {
+    public boolean removeNode(String name) {
+        if(globalNodeTable.containsKey(name)) {
+            TreeMap<String, CeNode> newTopology = new TreeMap<>(globalNodeTable);
+            newTopology.remove(name);
 
+            ArrayList<MovingDataObj> toMove = new ArrayList<>();
+            for (CeNode node : globalNodeTable.values()) {
+                toMove.addAll(node.shuffle(newTopology.values()));
+            }
+
+            for (MovingDataObj moving : toMove) {
+                moving.getAddress().insert(moving.getData());
+            }
+            globalNodeTable.remove(name);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void unplugNode(String name) {
+        globalNodeTable.remove(name);
+        System.out.println("Detected node failure, balancing...");
+        ArrayList<MovingDataObj> toMove = new ArrayList<>();
+        for (CeNode node : globalNodeTable.values()) {
+            toMove.addAll(node.shuffle(globalNodeTable.values()));
+        }
 
+        for (MovingDataObj moving : toMove) {
+            moving.getAddress().insert(moving.getData());
+        }
     }
 
     @Override
