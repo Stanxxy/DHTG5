@@ -62,7 +62,7 @@ public class CeNode extends Node {
         return false;
     }
 
-    //
+
     public List<MovingDataObj> shuffle(Collection<CeNode> nodes) {
         ArrayList<MovingDataObj> toMove = new ArrayList<>();
         for(DataObjPair data : storedData.values()) {

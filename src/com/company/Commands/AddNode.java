@@ -4,12 +4,13 @@ import com.company.Main;
 
 public class AddNode extends Command{
     public AddNode(Main main) {
-        super(main, "an", "add a node into the cluster", 1);
+        super(main, "an", "add a node into the cluster", 2);
         // current we assume the hash code of a node is set on the
     }
 
     @Override
     protected void runOnLine(String[] args) {
+
         String type = main.foregroundDHT.getName();
 
         if(type.equals("CaDHT")) {
