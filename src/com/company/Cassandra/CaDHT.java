@@ -96,6 +96,9 @@ public class CaDHT implements BasicDHT, NodeManager {
 
     @Override
     public String listNodeMeta(String nodeName) {
+        if(!caCluster.getGlobalNodeTable().containsKey(nodeName)){
+            return null;
+        }
         StringBuilder sb;
         sb = new StringBuilder();
         sb.append("=========================\n");

@@ -11,7 +11,7 @@ public class CephHashTools {
     private static MessageDigest md;
 
     public static void initialize() throws NoSuchAlgorithmException {
-        md = MessageDigest.getInstance("SHA256");
+        md = MessageDigest.getInstance("SHA-256");
     }
 
     public static CeNode computeDataLocation(Collection<CeNode> nodeCollection, DataObjPair data) {

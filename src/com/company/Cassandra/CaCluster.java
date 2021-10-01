@@ -33,7 +33,7 @@ public class CaCluster extends NodeCluster<CaNode> {
             String nextNode = node.getTableInfo().get(downName)[0];
             ansNode = globalNodeTable.get(nextNode);
             while (ansNode == null){
-                nextNode = node.getTableInfo().get(nextNode)[0]; // get the successor
+                nextNode = node.getTableInfo().get(nextNode)[0]; // get the predecessor
                 ansNode = globalNodeTable.get(nextNode);
             }
         }
@@ -43,6 +43,21 @@ public class CaCluster extends NodeCluster<CaNode> {
     public void insertIntoTable(String key, String[] value){
         // update the insertion into the cluster
         for(CaNode node : this.globalNodeTable.values()){
+            node.getTableInfo().put(key, value);
+            if(node.equals(this.globalNodeTable.get(value[0]))){
+                String[] preAndSuc = node.getTableInfo().get(node.getName());
+                preAndSuc[1] = key;
+                node.getTableInfo().put(node.getName(), preAndSuc);
+            }
+            if(node.equals(this.globalNodeTable.get(value[1]))){
+                String[] preAndSuc = node.getTableInfo().get(node.getName());
+                preAndSuc[0] = key;
+                node.getTableInfo().put(node.getName(), preAndSuc);
+            }
+        }
+        // update existed keys
+        for(CaNode node : this.globalNodeTable.values()){
+
             node.getTableInfo().put(key, value);
         }
     }
