@@ -42,9 +42,10 @@ public class Main {
                 new ListAllNodes(this),
                 new ListNodeData(this),
                 new ListNodeMeta(this),
+                new GenerateRandomData(this),
                 new Debug(this),
                 new Quit(this),
-                new TestCeph(this),
+                //new TestCeph(this),
         };
         helpCommand.setCommands(commands);
         terminal = new Scanner(System.in);
