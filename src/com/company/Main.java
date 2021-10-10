@@ -1,9 +1,6 @@
 package com.company;
 
 import com.company.Commands.Command;
-import com.company.Ceph.CeCluster;
-import com.company.Ceph.CeNode;
-import com.company.Ceph.CephHashTools;
 import com.company.Commands.*;
 
 import java.util.Scanner;
@@ -20,6 +17,7 @@ public class Main {
     public BasicDHT backgroundDHT;
     public NodeManager foregroundManager;
     public NodeManager backgroundManager;
+    public Long hashRange; // used by Cassandra DHT to control data generation.
 
     private Command[] commands;
     private Scanner terminal;

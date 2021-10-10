@@ -29,7 +29,7 @@ public class SetClusterMeta extends Command{
         Long replica = Long.parseLong(args[2]);
         Long hashRange = Long.parseLong(args[3]);
 
-        NodeCluster.setHashRange(hashRange);
+        NodeCluster.setHashRange(1L << hashRange);
         if(type.equals("CaDHT")) {
             NodeCluster.setReplica(replica - 1); // make the origin data excluded
             if(args.length == 5) {
